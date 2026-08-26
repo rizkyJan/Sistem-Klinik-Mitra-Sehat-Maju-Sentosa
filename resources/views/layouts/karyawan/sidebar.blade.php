@@ -1,0 +1,459 @@
+{{-- ============================================================
+    MOBILE OVERLAY
+============================================================ --}}
+<div
+    id="karyawanSidebarOverlay"
+    class="
+        fixed
+        inset-0
+        z-40
+        hidden
+        bg-slate-900/50
+        backdrop-blur-[1px]
+
+        lg:hidden
+    "
+    onclick="closeKaryawanSidebar()">
+</div>
+
+
+{{-- ============================================================
+    SIDEBAR
+============================================================ --}}
+<aside
+    id="karyawanSidebar"
+    class="
+        fixed
+        inset-y-0
+        left-0
+        z-50
+
+        flex
+        w-72
+        max-w-[85vw]
+        flex-col
+
+        -translate-x-full
+
+        bg-slate-900
+        text-white
+
+        shadow-2xl
+
+        transition-transform
+        duration-300
+        ease-in-out
+
+        lg:z-40
+        lg:w-64
+        lg:max-w-none
+        lg:translate-x-0
+        lg:shadow-none
+    ">
+
+
+    {{-- ============================================================
+        BRAND
+    ============================================================ --}}
+    <div
+        class="
+            flex
+            h-16
+            shrink-0
+            items-center
+            justify-between
+
+            border-b
+            border-slate-800
+
+            px-4
+
+            sm:px-6
+        ">
+
+        <div class="flex min-w-0 items-center gap-3">
+
+            {{-- Logo --}}
+            <div
+                class="
+                    flex
+                    h-9
+                    w-9
+                    shrink-0
+                    items-center
+                    justify-center
+
+                    rounded-lg
+
+                    bg-blue-600
+
+                    font-bold
+                    text-white
+                ">
+                M
+            </div>
+
+
+            {{-- Brand --}}
+            <div class="min-w-0">
+
+                <h1
+                    class="
+                        truncate
+                        text-sm
+                        font-semibold
+                        leading-tight
+                    ">
+                    Sistem Perizinan
+                </h1>
+
+                <p class="text-xs text-slate-400">
+                    MSMS
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {{-- Close Button Mobile --}}
+        <button
+            type="button"
+            onclick="closeKaryawanSidebar()"
+            class="
+                flex
+                h-9
+                w-9
+                shrink-0
+                items-center
+                justify-center
+
+                rounded-lg
+
+                text-slate-400
+
+                transition
+
+                hover:bg-slate-800
+                hover:text-white
+
+                lg:hidden
+            "
+            aria-label="Tutup menu">
+
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12" />
+
+            </svg>
+
+        </button>
+
+    </div>
+
+
+
+    {{-- ============================================================
+        NAVIGATION
+    ============================================================ --}}
+    <nav
+        class="
+            flex-1
+            overflow-y-auto
+            overscroll-contain
+            px-4
+            py-5
+        ">
+
+
+        {{-- ========================================================
+            MENU
+        ======================================================== --}}
+        <div>
+
+            <p
+                class="
+                    mb-3
+                    px-3
+                    text-xs
+                    font-semibold
+                    uppercase
+                    tracking-wider
+                    text-slate-500
+                ">
+                Menu
+            </p>
+
+
+            {{-- ====================================================
+                DASHBOARD
+            ==================================================== --}}
+            <a
+                href="{{ route('karyawan.dashboard') }}"
+                onclick="closeKaryawanSidebar()"
+                class="
+                    flex
+                    items-center
+                    gap-3
+
+                    rounded-lg
+
+                    px-3
+                    py-2.5
+
+                    text-sm
+                    font-medium
+
+                    transition
+
+                    {{ request()->routeIs('karyawan.dashboard')
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    }}
+                ">
+
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor">
+
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.5"
+                        d="M3 12l9-9 9 9M5 10v10h14V10" />
+
+                </svg>
+
+                <span class="truncate">
+                    Dashboard
+                </span>
+
+            </a>
+
+        </div>
+
+
+
+        {{-- ========================================================
+            PERIZINAN
+        ======================================================== --}}
+        <div class="mt-8">
+
+            <p
+                class="
+                    mb-3
+                    px-3
+                    text-xs
+                    font-semibold
+                    uppercase
+                    tracking-wider
+                    text-slate-500
+                ">
+                Perizinan
+            </p>
+
+
+            <div class="space-y-1">
+
+
+                {{-- =================================================
+                    AJUKAN CUTI
+                ================================================= --}}
+                <a
+                    href="{{ route('karyawan.leave-requests.create') }}"
+                    onclick="closeKaryawanSidebar()"
+                    class="
+                        flex
+                        items-center
+                        gap-3
+
+                        rounded-lg
+
+                        px-3
+                        py-2.5
+
+                        text-sm
+                        font-medium
+
+                        transition
+
+                        {{ request()->routeIs('karyawan.leave-requests.create')
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        }}
+                    ">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor">
+
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.5"
+                            d="M8 7V3
+                               m8 4V3
+                               M5 11h14
+                               M5 5h14
+                               a2 2 0 012 2v12
+                               a2 2 0 01-2 2H5
+                               a2 2 0 01-2-2V7
+                               a2 2 0 012-2z" />
+
+                    </svg>
+
+                    <span class="truncate">
+                        Ajukan Cuti
+                    </span>
+
+                </a>
+
+
+
+                {{-- =================================================
+                    RIWAYAT CUTI
+                ================================================= --}}
+                <a
+                    href="{{ route('karyawan.leave-requests.index') }}"
+                    onclick="closeKaryawanSidebar()"
+                    class="
+                        flex
+                        items-center
+                        gap-3
+
+                        rounded-lg
+
+                        px-3
+                        py-2.5
+
+                        text-sm
+                        font-medium
+
+                        transition
+
+                        {{
+                            request()->routeIs('karyawan.leave-requests.index')
+                            || request()->routeIs('karyawan.leave-requests.substitute.*')
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        }}
+                    ">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor">
+
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.5"
+                            d="M9 12h6
+                               M9 16h6
+                               M9 8h6
+                               M5 4h14
+                               v16H5z" />
+
+                    </svg>
+
+                    <span class="truncate">
+                        Riwayat Cuti
+                    </span>
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+
+    {{-- ============================================================
+        USER PROFILE BOTTOM
+    ============================================================ --}}
+    <div
+        class="
+            shrink-0
+            border-t
+            border-slate-800
+            p-4
+        ">
+
+        <div class="flex items-center gap-3">
+
+            {{-- Avatar --}}
+            <div
+                class="
+                    flex
+                    h-10
+                    w-10
+                    shrink-0
+                    items-center
+                    justify-center
+
+                    rounded-full
+
+                    bg-slate-700
+
+                    text-sm
+                    font-semibold
+                ">
+
+                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+
+            </div>
+
+
+            {{-- User Information --}}
+            <div class="min-w-0 flex-1">
+
+                <p
+                    class="
+                        truncate
+                        text-sm
+                        font-medium
+                        text-white
+                    ">
+
+                    {{ auth()->user()->name }}
+
+                </p>
+
+
+                <p
+                    class="
+                        truncate
+                        text-xs
+                        text-slate-400
+                    ">
+
+                    {{ auth()->user()->department?->name ?? 'Belum ada bidang' }}
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</aside>
