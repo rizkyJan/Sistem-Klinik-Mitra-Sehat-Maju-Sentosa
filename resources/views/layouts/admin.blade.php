@@ -349,6 +349,13 @@
         });
     </script>
 
+
+    {{-- Modal konfirmasi global untuk seluruh halaman Admin --}}
+    <x-confirm-action-modal />
+
+    {{-- Script tambahan dari halaman tertentu --}}
+    @stack('scripts')
+
 </body>
 
 </html>

@@ -291,7 +291,11 @@
                         action="{{ route('admin.admins.destroy', $item) }}"
                         method="POST"
                         class="flex-1"
-                        onsubmit="return confirm('Yakin ingin menghapus admin {{ addslashes($item->name) }}?')">
+                        data-confirm
+                        data-confirm-tone="danger"
+                        data-confirm-title="Hapus Admin?"
+                        data-confirm-message="Akun admin {{ $item->name }} akan dihapus. Tindakan ini tidak dapat dibatalkan."
+                        data-confirm-button="Ya, Hapus">
 
                         @csrf
                         @method('DELETE')
@@ -513,7 +517,11 @@
                                 <form
                                     action="{{ route('admin.admins.destroy', $item) }}"
                                     method="POST"
-                                    onsubmit="return confirm('Yakin ingin menghapus admin {{ addslashes($item->name) }}?')">
+                                    data-confirm
+                                    data-confirm-tone="danger"
+                                    data-confirm-title="Hapus Admin?"
+                                    data-confirm-message="Akun admin {{ $item->name }} akan dihapus. Tindakan ini tidak dapat dibatalkan."
+                                    data-confirm-button="Ya, Hapus">
 
                                     @csrf
                                     @method('DELETE')

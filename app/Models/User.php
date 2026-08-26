@@ -94,4 +94,21 @@ class User extends Authenticatable
             'approved_by'
         );
     }
+
+
+    public function reimbursements(): HasMany
+    {
+        return $this->hasMany(
+            Reimbursement::class
+        );
+    }
+
+
+    public function reviewedReimbursements(): HasMany
+    {
+        return $this->hasMany(
+            Reimbursement::class,
+            'reviewed_by'
+        );
+    }
 }

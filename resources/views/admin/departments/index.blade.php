@@ -307,7 +307,11 @@
                                 <form
                                     action="{{ route('admin.departments.destroy', $department) }}"
                                     method="POST"
-                                    onsubmit="return confirm('Yakin ingin menghapus bidang ini?')">
+                                    data-confirm
+                                    data-confirm-tone="danger"
+                                    data-confirm-title="Hapus Bidang?"
+                                    data-confirm-message="Bidang {{ $department->name }} akan dihapus. Pastikan data ini memang sudah tidak diperlukan."
+                                    data-confirm-button="Ya, Hapus">
                                     @csrf
                                     @method('DELETE')
 

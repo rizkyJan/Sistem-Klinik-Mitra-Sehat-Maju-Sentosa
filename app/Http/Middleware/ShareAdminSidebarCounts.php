@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\LeaveRequest;
+use App\Models\Reimbursement;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class ShareAdminSidebarCounts
      * Badge yang disediakan:
      * - $pendingEmployeeVerificationCount
      * - $pendingLeaveRequestCount
+     * - $pendingReimbursementCount
      */
     public function handle(
         Request $request,
@@ -24,17 +26,13 @@ class ShareAdminSidebarCounts
     ): Response {
         /*
         |--------------------------------------------------------------------------
-        | Hanya hitung untuk Admin / Kabid yang sedang login
+        | Hanya hitung untuk Admin yang sedang login
         |--------------------------------------------------------------------------
         */
         if (
             Auth::check()
             &&
-            in_array(
-                Auth::user()->role,
-                ['admin', 'kabid'],
-                true
-            )
+            Auth::user()->role === 'admin'
         ) {
             /*
             |--------------------------------------------------------------------------
@@ -64,6 +62,17 @@ class ShareAdminSidebarCounts
 
             /*
             |--------------------------------------------------------------------------
+            | Reimburse pending
+            |--------------------------------------------------------------------------
+            |
+            | Modul reimburse diproses oleh role admin.
+            */
+            $pendingReimbursementCount = Reimbursement::query()
+                ->where('status', Reimbursement::STATUS_PENDING)
+                ->count();
+
+            /*
+            |--------------------------------------------------------------------------
             | Share ke seluruh Blade pada request admin ini
             |--------------------------------------------------------------------------
             */
@@ -73,6 +82,9 @@ class ShareAdminSidebarCounts
 
                 'pendingLeaveRequestCount' =>
                 $pendingLeaveRequestCount,
+
+                'pendingReimbursementCount' =>
+                $pendingReimbursementCount,
             ]);
         }
 

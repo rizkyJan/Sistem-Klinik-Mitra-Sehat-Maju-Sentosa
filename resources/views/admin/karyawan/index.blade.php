@@ -39,18 +39,8 @@
     </div>
 
 
-    {{-- Alert --}}
-    @if(session('success'))
-
-    <div
-        class="rounded-lg border
-                   border-emerald-200
-                   bg-emerald-50 px-4 py-3
-                   text-sm text-emerald-700">
-        {{ session('success') }}
-    </div>
-
-    @endif
+    {{-- Toast success / error --}}
+    <x-toast-notification />
 
 
     {{-- Card --}}
@@ -73,21 +63,6 @@
                     placeholder="Cari nama, NIK, email, bidang..."
                     class="w-full max-w-xl
                            rounded-lg border-slate-300">
-
-                @if(auth()->user()->role === 'admin')
-                <select
-                    name="role"
-                    class="rounded-lg border-slate-300 text-sm">
-
-                    <option value="">Semua Jenis Akun</option>
-                    <option value="karyawan" @selected(request('role')==='karyawan' )>Karyawan</option>
-                    <option value="kabid" @selected(request('role')==='kabid' )>Kabid</option>
-                    <option value="admin" @selected(request('role')==='admin' )>Admin</option>
-
-                </select>
-                @endif
-
-
                 <select
                     name="approval_status"
                     class="rounded-lg border-slate-300 text-sm">
@@ -107,7 +82,7 @@
                 </button>
 
 
-                @if(request('search') || request('approval_status') || request('role'))
+                @if(request('search') || request('approval_status'))
 
                 <a
                     href="{{ route('admin.karyawan.index') }}"
@@ -214,13 +189,7 @@
                                     </p>
 
                                     <div class="mt-1.5 flex flex-wrap gap-1">
-                                        @if($item->role === 'admin')
-                                        <span class="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-700">Admin</span>
-                                        @elseif($item->role === 'kabid')
-                                        <span class="rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-semibold text-cyan-700">Kabid</span>
-                                        @else
                                         <span class="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">Karyawan</span>
-                                        @endif
 
                                         @if($item->google_id)
                                         <span class="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Google</span>
@@ -399,9 +368,11 @@
                                             $item
                                         ) }}"
                                     method="POST"
-                                    onsubmit="return confirm(
-                                            'Yakin ingin menghapus karyawan ini?'
-                                        )">
+                                    data-confirm
+                                    data-confirm-tone="danger"
+                                    data-confirm-title="Hapus Karyawan?"
+                                    data-confirm-message="Data karyawan {{ $item->name }} akan dihapus. Tindakan ini tidak dapat dibatalkan."
+                                    data-confirm-button="Ya, Hapus">
 
                                     @csrf
                                     @method('DELETE')

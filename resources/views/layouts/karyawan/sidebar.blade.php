@@ -174,12 +174,10 @@
             py-5
         ">
 
-
         {{-- ========================================================
             MENU
         ======================================================== --}}
         <div>
-
             <p
                 class="
                     mb-3
@@ -193,32 +191,16 @@
                 Menu
             </p>
 
-
-            {{-- ====================================================
-                DASHBOARD
-            ==================================================== --}}
             <a
                 href="{{ route('karyawan.dashboard') }}"
                 onclick="closeKaryawanSidebar()"
                 class="
-                    flex
-                    items-center
-                    gap-3
-
-                    rounded-lg
-
-                    px-3
-                    py-2.5
-
-                    text-sm
-                    font-medium
-
-                    transition
-
+                    flex items-center gap-3
+                    rounded-lg px-3 py-2.5
+                    text-sm font-medium transition
                     {{ request()->routeIs('karyawan.dashboard')
                         ? 'bg-blue-600 text-white shadow-sm'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                    }}
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}
                 ">
 
                 <svg
@@ -227,30 +209,24 @@
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor">
-
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
                         stroke-width="1.5"
                         d="M3 12l9-9 9 9M5 10v10h14V10" />
-
                 </svg>
 
                 <span class="truncate">
                     Dashboard
                 </span>
-
             </a>
-
         </div>
 
 
-
         {{-- ========================================================
-            PERIZINAN
+            CUTI & PERIZINAN
         ======================================================== --}}
         <div class="mt-8">
-
             <p
                 class="
                     mb-3
@@ -261,38 +237,22 @@
                     tracking-wider
                     text-slate-500
                 ">
-                Perizinan
+                Cuti & Perizinan
             </p>
-
 
             <div class="space-y-1">
 
-
-                {{-- =================================================
-                    AJUKAN CUTI
-                ================================================= --}}
+                {{-- Ajukan Cuti --}}
                 <a
                     href="{{ route('karyawan.leave-requests.create') }}"
                     onclick="closeKaryawanSidebar()"
                     class="
-                        flex
-                        items-center
-                        gap-3
-
-                        rounded-lg
-
-                        px-3
-                        py-2.5
-
-                        text-sm
-                        font-medium
-
-                        transition
-
+                        flex items-center gap-3
+                        rounded-lg px-3 py-2.5
+                        text-sm font-medium transition
                         {{ request()->routeIs('karyawan.leave-requests.create')
                             ? 'bg-blue-600 text-white shadow-sm'
-                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                        }}
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}
                     ">
 
                     <svg
@@ -301,51 +261,27 @@
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor">
-
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="1.5"
-                            d="M8 7V3
-                               m8 4V3
-                               M5 11h14
-                               M5 5h14
-                               a2 2 0 012 2v12
-                               a2 2 0 01-2 2H5
-                               a2 2 0 01-2-2V7
-                               a2 2 0 012-2z" />
-
+                            d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
                     </svg>
 
                     <span class="truncate">
                         Ajukan Cuti
                     </span>
-
                 </a>
 
 
-
-                {{-- =================================================
-                    RIWAYAT CUTI
-                ================================================= --}}
+                {{-- Riwayat Cuti --}}
                 <a
                     href="{{ route('karyawan.leave-requests.index') }}"
                     onclick="closeKaryawanSidebar()"
                     class="
-                        flex
-                        items-center
-                        gap-3
-
-                        rounded-lg
-
-                        px-3
-                        py-2.5
-
-                        text-sm
-                        font-medium
-
-                        transition
-
+                        flex items-center gap-3
+                        rounded-lg px-3 py-2.5
+                        text-sm font-medium transition
                         {{
                             request()->routeIs('karyawan.leave-requests.index')
                             || request()->routeIs('karyawan.leave-requests.substitute.*')
@@ -360,27 +296,109 @@
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor">
-
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
                             stroke-width="1.5"
-                            d="M9 12h6
-                               M9 16h6
-                               M9 8h6
-                               M5 4h14
-                               v16H5z" />
-
+                            d="M9 12h6M9 16h6M9 8h6M5 4h14v16H5z" />
                     </svg>
 
                     <span class="truncate">
                         Riwayat Cuti
                     </span>
-
                 </a>
 
             </div>
+        </div>
 
+
+        {{-- ========================================================
+            KEUANGAN
+        ======================================================== --}}
+        <div class="mt-8">
+            <p
+                class="
+                    mb-3
+                    px-3
+                    text-xs
+                    font-semibold
+                    uppercase
+                    tracking-wider
+                    text-slate-500
+                ">
+                Keuangan
+            </p>
+
+            <div class="space-y-1">
+
+                {{-- Ajukan Reimburse --}}
+                <a
+                    href="{{ route('karyawan.reimbursements.create') }}"
+                    onclick="closeKaryawanSidebar()"
+                    class="
+                        flex items-center gap-3
+                        rounded-lg px-3 py-2.5
+                        text-sm font-medium transition
+                        {{ request()->routeIs('karyawan.reimbursements.create')
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}
+                    ">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.5"
+                            d="M12 6v12m6-6H6m-1-8h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
+                    </svg>
+
+                    <span class="truncate">
+                        Ajukan Reimburse
+                    </span>
+                </a>
+
+
+                {{-- Riwayat Reimburse --}}
+                <a
+                    href="{{ route('karyawan.reimbursements.index') }}"
+                    onclick="closeKaryawanSidebar()"
+                    class="
+                        flex items-center gap-3
+                        rounded-lg px-3 py-2.5
+                        text-sm font-medium transition
+                        {{
+                            request()->routeIs('karyawan.reimbursements.index')
+                            || request()->routeIs('karyawan.reimbursements.show')
+                            || request()->routeIs('karyawan.reimbursements.edit')
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        }}
+                    ">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.5"
+                            d="M9 12h6m-6 4h6M7 4h10a2 2 0 012 2v14H5V6a2 2 0 012-2z" />
+                    </svg>
+
+                    <span class="truncate">
+                        Riwayat Reimburse
+                    </span>
+                </a>
+
+            </div>
         </div>
 
     </nav>

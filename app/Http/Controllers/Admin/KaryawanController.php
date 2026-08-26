@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -522,14 +523,87 @@ class KaryawanController extends Controller
 
 
         /*
-         * Kalau nanti data sudah banyak,
-         * sebenarnya lebih aman nonaktifkan
-         * daripada delete.
-         *
-         * Untuk sekarang kita pertahankan CRUD.
-         */
+        |--------------------------------------------------------------------------
+        | Jangan hard delete jika sudah punya riwayat penting
+        |--------------------------------------------------------------------------
+        |
+        | Data perizinan dan reimbursement adalah data histori.
+        | Kalau user dihapus paksa, relasi foreign key dapat bentrok
+        | atau histori operasional/keuangan ikut hilang.
+        |
+        | Solusi yang lebih aman:
+        | - Karyawan tanpa histori -> boleh dihapus.
+        | - Karyawan dengan histori -> jangan dihapus, nonaktifkan saja.
+        |
+        */
 
-        $karyawan->delete();
+        $leaveRequestCount =
+            $karyawan->leaveRequests()->count();
+
+        $reimbursementCount =
+            $karyawan->reimbursements()->count();
+
+
+        if (
+            $leaveRequestCount > 0
+            || $reimbursementCount > 0
+        ) {
+
+            $relatedData = [];
+
+            if ($leaveRequestCount > 0) {
+                $relatedData[] =
+                    $leaveRequestCount
+                    . ' riwayat perizinan/cuti';
+            }
+
+            if ($reimbursementCount > 0) {
+                $relatedData[] =
+                    $reimbursementCount
+                    . ' riwayat reimbursement';
+            }
+
+
+            return redirect()
+                ->route('admin.karyawan.index')
+                ->with(
+                    'error',
+                    'Data karyawan "'
+                        . $karyawan->name
+                        . '" tidak dapat dihapus karena masih memiliki '
+                        . implode(' dan ', $relatedData)
+                        . '. Nonaktifkan akun melalui menu Edit agar riwayat tetap aman.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Fallback database protection
+        |--------------------------------------------------------------------------
+        |
+        | Walaupun pengecekan di atas sudah dilakukan, foreign key lain
+        | mungkin ditambahkan di masa depan. Tangkap QueryException agar
+        | user tidak mendapat halaman Internal Server Error.
+        |
+        */
+
+        try {
+
+            $karyawan->delete();
+        } catch (QueryException $exception) {
+
+            report($exception);
+
+
+            return redirect()
+                ->route('admin.karyawan.index')
+                ->with(
+                    'error',
+                    'Data karyawan tidak dapat dihapus karena masih digunakan oleh data lain. '
+                        . 'Silakan nonaktifkan akun karyawan melalui menu Edit.'
+                );
+        }
 
 
         return redirect()

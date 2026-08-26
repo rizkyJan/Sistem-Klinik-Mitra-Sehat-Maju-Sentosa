@@ -11,6 +11,8 @@ use App\Http\Controllers\Karyawan\DashboardController as KaryawanDashboardContro
 use App\Http\Controllers\Karyawan\LeaveRequestController as KaryawanLeaveRequestController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Middleware\ShareAdminSidebarCounts;
+use App\Http\Controllers\Admin\ReimbursementController as AdminReimbursementController;
+use App\Http\Controllers\Karyawan\ReimbursementController as KaryawanReimbursementController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -115,6 +117,37 @@ Route::middleware([
             AdminLeaveRequestController::class,
             'show'
         ])->name('leave-requests.show');
+
+
+        Route::get('/reimbursements', [
+            AdminReimbursementController::class,
+            'index'
+        ])->name('reimbursements.index');
+
+        Route::get('/reimbursements/{reimbursement}/receipt', [
+            AdminReimbursementController::class,
+            'receipt'
+        ])->name('reimbursements.receipt');
+
+        Route::patch('/reimbursements/{reimbursement}/approve', [
+            AdminReimbursementController::class,
+            'approve'
+        ])->name('reimbursements.approve');
+
+        Route::patch('/reimbursements/{reimbursement}/reject', [
+            AdminReimbursementController::class,
+            'reject'
+        ])->name('reimbursements.reject');
+
+        Route::patch('/reimbursements/{reimbursement}/paid', [
+            AdminReimbursementController::class,
+            'markPaid'
+        ])->name('reimbursements.paid');
+
+        Route::get('/reimbursements/{reimbursement}', [
+            AdminReimbursementController::class,
+            'show'
+        ])->name('reimbursements.show');
     });
 
 
@@ -144,6 +177,46 @@ Route::middleware(['auth'])
             KaryawanLeaveRequestController::class,
             'store'
         ])->name('leave-requests.store');
+
+        Route::get('/reimbursements', [
+            KaryawanReimbursementController::class,
+            'index'
+        ])->name('reimbursements.index');
+
+        Route::get('/reimbursements/create', [
+            KaryawanReimbursementController::class,
+            'create'
+        ])->name('reimbursements.create');
+
+        Route::post('/reimbursements', [
+            KaryawanReimbursementController::class,
+            'store'
+        ])->name('reimbursements.store');
+
+        Route::get('/reimbursements/{reimbursement}/receipt', [
+            KaryawanReimbursementController::class,
+            'receipt'
+        ])->name('reimbursements.receipt');
+
+        Route::get('/reimbursements/{reimbursement}/edit', [
+            KaryawanReimbursementController::class,
+            'edit'
+        ])->name('reimbursements.edit');
+
+        Route::put('/reimbursements/{reimbursement}', [
+            KaryawanReimbursementController::class,
+            'update'
+        ])->name('reimbursements.update');
+
+        Route::delete('/reimbursements/{reimbursement}', [
+            KaryawanReimbursementController::class,
+            'destroy'
+        ])->name('reimbursements.destroy');
+
+        Route::get('/reimbursements/{reimbursement}', [
+            KaryawanReimbursementController::class,
+            'show'
+        ])->name('reimbursements.show');
     });
 
 Route::middleware('auth')->group(function () {

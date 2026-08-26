@@ -21,7 +21,12 @@
         @if($year <= now()->year)
             <form
                 action="{{ route('admin.leave-balances.generate') }}"
-                method="POST">
+                method="POST"
+                data-confirm
+                data-confirm-tone="warning"
+                data-confirm-title="Generate Jatah Cuti {{ $year }}?"
+                data-confirm-message="Jatah cuti akan dibuat untuk seluruh karyawan yang sudah genap 12 bulan dan memenuhi syarat."
+                data-confirm-button="Ya, Generate">
                 @csrf
 
                 <input
@@ -31,8 +36,7 @@
 
                 <button
                     type="submit"
-                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
-                    onclick="return confirm('Generate jatah cuti {{ $year }} untuk seluruh karyawan yang sudah genap 12 bulan?')">
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
                     <span class="text-xl leading-none">+</span>
                     Generate Jatah {{ $year }}
                 </button>
