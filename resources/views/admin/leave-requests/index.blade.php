@@ -210,11 +210,76 @@
 
                         <td class="px-5 py-4 text-sm">
 
-                            {{ $leave->substitute_name }}
+                            @php
+                            $hasSelfReplacement =
+                            $leave->self_replacement_days > 0;
 
-                            <p class="text-xs text-slate-500">
-                                {{ $leave->substitute_whatsapp }}
-                            </p>
+                            $firstSubstituteSchedule =
+                            $leave->substituteSchedules->first();
+
+                            $hasRecordedSubstitute =
+                            $leave->has_substitute
+                            && $firstSubstituteSchedule !== null;
+
+                            $companyScheduleCount =
+                            $leave->substituteSchedules
+                            ->where('substitute_fee_payer', 'company')
+                            ->count();
+
+                            $employeeScheduleCount =
+                            $leave->substituteSchedules
+                            ->where('substitute_fee_payer', 'employee')
+                            ->count();
+                            @endphp
+
+                            @if($hasSelfReplacement)
+                            <div>
+                                <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                    Pengganti Mandiri
+                                </span>
+
+                                <p class="mt-2 font-semibold text-slate-700">
+                                    {{ $leave->self_replacement_days }} hari
+                                </p>
+
+                                <p class="text-xs text-slate-500">
+                                    Biaya ditanggung pemohon
+                                </p>
+                            </div>
+                            @endif
+
+                            @if($hasRecordedSubstitute)
+                            <div class="{{ $hasSelfReplacement ? 'mt-3 border-t border-slate-100 pt-3' : '' }}">
+                                <p class="font-semibold text-slate-700">
+                                    {{ $leave->substitute_name ?? '-' }}
+                                </p>
+
+                                <p class="text-xs text-slate-500">
+                                    {{ $leave->substitute_whatsapp ?? '-' }}
+                                </p>
+
+                                <p class="mt-1 text-xs text-slate-500">
+                                    {{ $leave->substituteSchedules->count() }}
+                                    jadwal tercatat
+                                </p>
+
+                                @if($companyScheduleCount > 0)
+                                <p class="mt-1 text-xs font-medium text-blue-600">
+                                    Perusahaan: {{ $companyScheduleCount }} hari
+                                </p>
+                                @endif
+
+                                @if($employeeScheduleCount > 0)
+                                <p class="mt-1 text-xs font-medium text-amber-600">
+                                    Pemohon tercatat: {{ $employeeScheduleCount }} hari
+                                </p>
+                                @endif
+                            </div>
+                            @endif
+
+                            @if(! $hasSelfReplacement && ! $hasRecordedSubstitute)
+                            <span class="text-slate-400">-</span>
+                            @endif
 
                         </td>
 

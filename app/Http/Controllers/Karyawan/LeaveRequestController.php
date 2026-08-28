@@ -154,6 +154,24 @@ class LeaveRequestController extends Controller
             'expected_delivery_date' => ['nullable', 'date'],
             'reason' => ['required', 'string', 'max:1000'],
             'salary_deduction_consent' => ['nullable', 'boolean'],
+
+            // Semua jenis perizinan selain Cuti Tahunan dapat membagi
+            // hari di luar hak kebijakan menjadi cuti tahunan / biaya mandiri.
+            'excess_annual_leave_days' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
+
+            // Kompatibilitas dengan form revisi sakit lama.
+            'sick_annual_leave_days' => [
+                'nullable',
+                'integer',
+                'min:0',
+            ],
+
+            'self_replacement_consent' => ['nullable', 'boolean'],
+
             'supporting_document' => [
                 'nullable',
                 'file',
@@ -201,6 +219,11 @@ class LeaveRequestController extends Controller
                 'nullable',
                 'string',
                 'max:20',
+            ],
+
+            'substitute_schedules.*.substitute_fee_payer' => [
+                'nullable',
+                Rule::in(['employee', 'company']),
             ],
 
             'substitute_schedules.*.substitute_address' => [
@@ -288,6 +311,9 @@ class LeaveRequestController extends Controller
         $excessHandling = 'none';
         $annualLeaveDeductedDays = 0;
         $unpaidDays = 0;
+        $selfReplacementDays = 0;
+        $selfReplacementConsent = false;
+        $selfReplacementConsentAt = null;
         $leaveBalanceId = null;
         $maternitySalaryStatus = null;
 
@@ -311,7 +337,20 @@ class LeaveRequestController extends Controller
 
             if ($totalDays <= 0) {
                 throw ValidationException::withMessages([
-                    'start_date' => 'Periode yang dipilih tidak memiliki hari kerja.',
+                    'start_date' => 'Periode cuti yang dipilih tidak valid.',
+                ]);
+            }
+
+            /*
+             * Keamanan cuti tahunan:
+             * satu pengajuan maksimal 3 hari.
+             * Validasi ini ada di backend agar tidak dapat dilewati dengan
+             * mengubah HTML/JavaScript dari browser.
+             */
+            if ($totalDays > 3) {
+                throw ValidationException::withMessages([
+                    'end_date' =>
+                    'Satu kali pengajuan cuti tahunan maksimal 3 hari. Semua tanggal dalam rentang, termasuk hari Minggu, ikut dihitung.',
                 ]);
             }
 
@@ -337,100 +376,71 @@ class LeaveRequestController extends Controller
             }
 
             $policyCoveredDays = min($totalDays, 1);
-            $excessDays = max(0, $totalDays - 1);
+            $excessDays = max(0, $totalDays - $policyCoveredDays);
 
-            if ($excessDays > 0) {
-                $allocation = $this->allocateExcessDays(
-                    user: $user,
-                    startDate: $startDate,
-                    endDate: $endDate,
-                    excessDays: $excessDays
-                );
+            $allocation = $this->resolveFlexibleExcessAllocation(
+                request: $request,
+                user: $user,
+                startDate: $startDate,
+                endDate: $endDate,
+                excessDays: $excessDays
+            );
 
-                $annualLeaveDeductedDays = $allocation['annual_leave_days'];
-                $unpaidDays = $allocation['unpaid_days'];
-                $leaveBalanceId = $allocation['leave_balance_id'];
-                $excessHandling = $this->resolveExcessHandling(
-                    $annualLeaveDeductedDays,
-                    $unpaidDays
-                );
-
-                $this->ensureSalaryDeductionConsent(
-                    $request,
-                    $unpaidDays,
-                    'Terdapat hari izin sakit yang tidak dapat ditutup oleh hak sakit maupun cuti tahunan.'
-                );
-            }
+            $annualLeaveDeductedDays = $allocation['annual_leave_days'];
+            $selfReplacementDays = $allocation['self_replacement_days'];
+            $selfReplacementConsent = $allocation['self_replacement_consent'];
+            $selfReplacementConsentAt = $allocation['self_replacement_consent_at'];
+            $leaveBalanceId = $allocation['leave_balance_id'];
+            $unpaidDays = 0;
+            $excessHandling = $annualLeaveDeductedDays > 0 ? 'annual_leave' : 'none';
         }
 
         if ($permissionType->code === 'marriage') {
             $policyCoveredDays = min($totalDays, 3);
             $excessDays = max(0, $totalDays - 3);
 
-            if ($excessDays > 0) {
-                $allocation = $this->allocateExcessDays(
-                    user: $user,
-                    startDate: $startDate,
-                    endDate: $endDate,
-                    excessDays: $excessDays
-                );
+            $allocation = $this->resolveFlexibleExcessAllocation(
+                request: $request,
+                user: $user,
+                startDate: $startDate,
+                endDate: $endDate,
+                excessDays: $excessDays
+            );
 
-                $annualLeaveDeductedDays = $allocation['annual_leave_days'];
-                $unpaidDays = $allocation['unpaid_days'];
-                $leaveBalanceId = $allocation['leave_balance_id'];
-                $excessHandling = $this->resolveExcessHandling(
-                    $annualLeaveDeductedDays,
-                    $unpaidDays
-                );
-
-                $this->ensureSalaryDeductionConsent(
-                    $request,
-                    $unpaidDays,
-                    'Terdapat hari izin menikah yang tidak dapat ditutup oleh hak menikah maupun cuti tahunan.'
-                );
-            }
+            $annualLeaveDeductedDays = $allocation['annual_leave_days'];
+            $selfReplacementDays = $allocation['self_replacement_days'];
+            $selfReplacementConsent = $allocation['self_replacement_consent'];
+            $selfReplacementConsentAt = $allocation['self_replacement_consent_at'];
+            $leaveBalanceId = $allocation['leave_balance_id'];
+            $unpaidDays = 0;
+            $excessHandling = $annualLeaveDeductedDays > 0 ? 'annual_leave' : 'none';
         }
 
         if ($permissionType->code === 'miscarriage') {
             $policyCoveredDays = min($totalDays, 7);
             $excessDays = max(0, $totalDays - 7);
 
-            if ($excessDays > 0) {
-                $allocation = $this->allocateExcessDays(
-                    user: $user,
-                    startDate: $startDate,
-                    endDate: $endDate,
-                    excessDays: $excessDays
-                );
+            $allocation = $this->resolveFlexibleExcessAllocation(
+                request: $request,
+                user: $user,
+                startDate: $startDate,
+                endDate: $endDate,
+                excessDays: $excessDays
+            );
 
-                $annualLeaveDeductedDays = $allocation['annual_leave_days'];
-                $unpaidDays = $allocation['unpaid_days'];
-                $leaveBalanceId = $allocation['leave_balance_id'];
-                $excessHandling = $this->resolveExcessHandling(
-                    $annualLeaveDeductedDays,
-                    $unpaidDays
-                );
-
-                $this->ensureSalaryDeductionConsent(
-                    $request,
-                    $unpaidDays,
-                    'Terdapat hari cuti keguguran yang melebihi hak 7 hari dan tidak dapat ditutup oleh cuti tahunan.'
-                );
-            }
+            $annualLeaveDeductedDays = $allocation['annual_leave_days'];
+            $selfReplacementDays = $allocation['self_replacement_days'];
+            $selfReplacementConsent = $allocation['self_replacement_consent'];
+            $selfReplacementConsentAt = $allocation['self_replacement_consent_at'];
+            $leaveBalanceId = $allocation['leave_balance_id'];
+            $unpaidDays = 0;
+            $excessHandling = $annualLeaveDeductedDays > 0 ? 'annual_leave' : 'none';
         }
 
         if ($permissionType->code === 'maternity') {
-            $expectedDelivery = Carbon::parse(
-                $validated['expected_delivery_date']
-            );
-
-            $policyStart = $expectedDelivery
-                ->copy()
-                ->subMonthNoOverflow();
-
-            $policyEnd = $expectedDelivery
-                ->copy()
-                ->addMonthNoOverflow();
+            $expectedDelivery = Carbon::parse($validated['expected_delivery_date']);
+            $policyStart = $expectedDelivery->copy()->subMonthNoOverflow();
+            $policyEnd = $expectedDelivery->copy()->addMonthNoOverflow();
 
             $coveredStart = $startDate->gt($policyStart)
                 ? $startDate->copy()
@@ -440,45 +450,30 @@ class LeaveRequestController extends Controller
                 ? $endDate->copy()
                 : $policyEnd->copy();
 
-            if ($coveredStart->lte($coveredEnd)) {
-                $policyCoveredDays = $coveredStart->diffInDays($coveredEnd) + 1;
-            } else {
-                $policyCoveredDays = 0;
-            }
+            $policyCoveredDays = $coveredStart->lte($coveredEnd)
+                ? $coveredStart->diffInDays($coveredEnd) + 1
+                : 0;
 
-            $excessDays = max(
-                0,
-                $totalDays - $policyCoveredDays
+            $excessDays = max(0, $totalDays - $policyCoveredDays);
+
+            $allocation = $this->resolveFlexibleExcessAllocation(
+                request: $request,
+                user: $user,
+                startDate: $startDate,
+                endDate: $endDate,
+                excessDays: $excessDays
             );
 
-            if ($excessDays > 0) {
-                $allocation = $this->allocateExcessDays(
-                    user: $user,
-                    startDate: $startDate,
-                    endDate: $endDate,
-                    excessDays: $excessDays
-                );
-
-                $annualLeaveDeductedDays = $allocation['annual_leave_days'];
-                $unpaidDays = $allocation['unpaid_days'];
-                $leaveBalanceId = $allocation['leave_balance_id'];
-                $excessHandling = $this->resolveExcessHandling(
-                    $annualLeaveDeductedDays,
-                    $unpaidDays
-                );
-
-                $this->ensureSalaryDeductionConsent(
-                    $request,
-                    $unpaidDays,
-                    'Terdapat tambahan hari cuti melahirkan di luar periode hak yang tidak dapat ditutup oleh cuti tahunan.'
-                );
-            }
+            $annualLeaveDeductedDays = $allocation['annual_leave_days'];
+            $selfReplacementDays = $allocation['self_replacement_days'];
+            $selfReplacementConsent = $allocation['self_replacement_consent'];
+            $selfReplacementConsentAt = $allocation['self_replacement_consent_at'];
+            $leaveBalanceId = $allocation['leave_balance_id'];
+            $unpaidDays = 0;
+            $excessHandling = $annualLeaveDeductedDays > 0 ? 'annual_leave' : 'none';
 
             if ($user->join_date) {
-                $oneYearDate = $user
-                    ->join_date
-                    ->copy()
-                    ->addYear();
+                $oneYearDate = $user->join_date->copy()->addYear();
 
                 $maternitySalaryStatus = $startDate->gte($oneYearDate)
                     ? 'paid_base_salary'
@@ -490,7 +485,8 @@ class LeaveRequestController extends Controller
             $policyCoveredDays = 0;
             $excessDays = $totalDays;
 
-            $allocation = $this->allocateExcessDays(
+            $allocation = $this->resolveFlexibleExcessAllocation(
+                request: $request,
                 user: $user,
                 startDate: $startDate,
                 endDate: $endDate,
@@ -498,18 +494,12 @@ class LeaveRequestController extends Controller
             );
 
             $annualLeaveDeductedDays = $allocation['annual_leave_days'];
-            $unpaidDays = $allocation['unpaid_days'];
+            $selfReplacementDays = $allocation['self_replacement_days'];
+            $selfReplacementConsent = $allocation['self_replacement_consent'];
+            $selfReplacementConsentAt = $allocation['self_replacement_consent_at'];
             $leaveBalanceId = $allocation['leave_balance_id'];
-            $excessHandling = $this->resolveExcessHandling(
-                $annualLeaveDeductedDays,
-                $unpaidDays
-            );
-
-            $this->ensureSalaryDeductionConsent(
-                $request,
-                $unpaidDays,
-                'Izin lainnya tidak memiliki jatah hari khusus. Terdapat hari yang tidak dapat ditutup oleh cuti tahunan.'
-            );
+            $unpaidDays = 0;
+            $excessHandling = $annualLeaveDeductedDays > 0 ? 'annual_leave' : 'none';
         }
 
         /*
@@ -522,13 +512,22 @@ class LeaveRequestController extends Controller
         |
         */
         $requestedHasSubstitute = (bool) $validated['has_substitute'];
+
+        if ($annualLeaveDeductedDays > 0 && ! $requestedHasSubstitute) {
+            throw ValidationException::withMessages([
+                'has_substitute' =>
+                "Pengajuan ini menggunakan {$annualLeaveDeductedDays} hari cuti tahunan. Aktifkan bagian pengganti dan isi data pengganti yang dibayar Perusahaan.",
+            ]);
+        }
+
         $substituteSchedules = [];
 
         if ($requestedHasSubstitute) {
             $substituteSchedules = $this->normalizeSubstituteSchedules(
                 $validated['substitute_schedules'] ?? [],
                 $startDate,
-                $endDate
+                $endDate,
+                $annualLeaveDeductedDays
             );
         }
 
@@ -593,6 +592,9 @@ class LeaveRequestController extends Controller
                 $excessHandling,
                 $annualLeaveDeductedDays,
                 $unpaidDays,
+                $selfReplacementDays,
+                $selfReplacementConsent,
+                $selfReplacementConsentAt,
                 $documentPath,
                 $maternitySalaryStatus,
                 $substituteData,
@@ -612,6 +614,11 @@ class LeaveRequestController extends Controller
                     'excess_handling' => $excessHandling,
                     'annual_leave_deducted_days' => $annualLeaveDeductedDays,
                     'unpaid_days' => $unpaidDays,
+
+                    'self_replacement_days' => $selfReplacementDays,
+                    'self_replacement_consent' => $selfReplacementConsent,
+                    'self_replacement_consent_at' => $selfReplacementConsentAt,
+
                     'salary_deduction_consent' =>
                     $unpaidDays > 0
                         && $request->boolean('salary_deduction_consent'),
@@ -645,6 +652,82 @@ class LeaveRequestController extends Controller
                 'Pengajuan perizinan berhasil dikirim dan sedang menunggu persetujuan.'
             );
     }
+
+    private function resolveFlexibleExcessAllocation(
+        Request $request,
+        User $user,
+        Carbon $startDate,
+        Carbon $endDate,
+        int $excessDays,
+        string $errorField = 'excess_annual_leave_days'
+    ): array {
+        $requestedAnnualDays = (int) $request->input(
+            'excess_annual_leave_days',
+            $request->input('sick_annual_leave_days', 0)
+        );
+
+        if ($requestedAnnualDays > $excessDays) {
+            throw ValidationException::withMessages([
+                $errorField =>
+                "Hari cuti tahunan tidak boleh melebihi jumlah hari yang perlu dibagi ({$excessDays} hari).",
+            ]);
+        }
+
+        $leaveBalanceId = null;
+
+        if ($requestedAnnualDays > 0) {
+            $this->ensureAnnualLeaveEligible(
+                $user,
+                $startDate,
+                $errorField
+            );
+
+            if ($startDate->year !== $endDate->year) {
+                throw ValidationException::withMessages([
+                    $errorField =>
+                    'Penggunaan cuti tahunan pada pengajuan ini tidak boleh melewati pergantian tahun.',
+                ]);
+            }
+
+            $balance = $this->resolveAnnualBalance(
+                $user->id,
+                $startDate->year,
+                $requestedAnnualDays,
+                $errorField
+            );
+
+            $leaveBalanceId = $balance->id;
+        }
+
+        $selfReplacementDays = max(
+            0,
+            $excessDays - $requestedAnnualDays
+        );
+
+        $selfReplacementConsent = false;
+        $selfReplacementConsentAt = null;
+
+        if ($selfReplacementDays > 0) {
+            if (! $request->boolean('self_replacement_consent')) {
+                throw ValidationException::withMessages([
+                    'self_replacement_consent' =>
+                    "Terdapat {$selfReplacementDays} hari yang tidak menggunakan cuti tahunan. Konfirmasikan bahwa pengganti dan biayanya menjadi tanggung jawab Anda sendiri.",
+                ]);
+            }
+
+            $selfReplacementConsent = true;
+            $selfReplacementConsentAt = now();
+        }
+
+        return [
+            'annual_leave_days' => $requestedAnnualDays,
+            'self_replacement_days' => $selfReplacementDays,
+            'self_replacement_consent' => $selfReplacementConsent,
+            'self_replacement_consent_at' => $selfReplacementConsentAt,
+            'leave_balance_id' => $leaveBalanceId,
+        ];
+    }
+
 
     private function allocateExcessDays(
         User $user,
@@ -755,7 +838,8 @@ class LeaveRequestController extends Controller
     private function normalizeSubstituteSchedules(
         array $schedules,
         Carbon $startDate,
-        Carbon $endDate
+        Carbon $endDate,
+        int $annualLeaveDeductedDays
     ): array {
         $allowedDates = $this->getDateRange(
             $startDate,
@@ -764,6 +848,7 @@ class LeaveRequestController extends Controller
 
         $submittedDates = [];
         $normalized = [];
+        $companyPaidSubstituteDays = 0;
 
         foreach ($schedules as $index => $schedule) {
             $date = $schedule['schedule_date'] ?? null;
@@ -806,7 +891,7 @@ class LeaveRequestController extends Controller
 
             $name = trim((string) ($schedule['substitute_name'] ?? ''));
             $whatsapp = trim((string) ($schedule['substitute_whatsapp'] ?? ''));
-            $address = trim((string) ($schedule['substitute_address'] ?? ''));
+            $feePayer = $schedule['substitute_fee_payer'] ?? 'employee';
             $bankName = trim((string) ($schedule['substitute_bank_name'] ?? ''));
             $accountNumber = trim((string) ($schedule['substitute_bank_account_number'] ?? ''));
             $accountHolder = trim((string) ($schedule['substitute_bank_account_holder'] ?? ''));
@@ -826,32 +911,54 @@ class LeaveRequestController extends Controller
                 ]);
             }
 
-            if ($address === '') {
+            if (! in_array($feePayer, ['employee', 'company'], true)) {
                 throw ValidationException::withMessages([
                     'substitute_schedules' =>
-                    "Alamat pengganti untuk tanggal {$date} wajib diisi.",
+                    "Pilih siapa yang membayar biaya pengganti untuk tanggal {$date}.",
                 ]);
             }
 
-            if ($bankName === '') {
-                throw ValidationException::withMessages([
-                    'substitute_schedules' =>
-                    "Nama bank pengganti untuk tanggal {$date} wajib diisi.",
-                ]);
-            }
+            /*
+             * Perusahaan hanya boleh menanggung biaya pengganti jika pada
+             * pengajuan ini memang ada hari yang menggunakan saldo cuti
+             * tahunan. Jumlah hari yang dibayar perusahaan juga tidak boleh
+             * melebihi jumlah cuti tahunan yang digunakan pada pengajuan.
+             */
+            if ($feePayer === 'company') {
+                if ($annualLeaveDeductedDays <= 0) {
+                    throw ValidationException::withMessages([
+                        'substitute_schedules' =>
+                        "Biaya pengganti tanggal {$date} tidak dapat dibebankan ke perusahaan karena pengajuan ini tidak menggunakan saldo cuti tahunan.",
+                    ]);
+                }
 
-            if ($accountNumber === '') {
-                throw ValidationException::withMessages([
-                    'substitute_schedules' =>
-                    "Nomor rekening pengganti untuk tanggal {$date} wajib diisi.",
-                ]);
-            }
+                if ($bankName === '') {
+                    throw ValidationException::withMessages([
+                        'substitute_schedules' =>
+                        "Nama bank pengganti untuk tanggal {$date} wajib diisi jika biaya ditanggung perusahaan.",
+                    ]);
+                }
 
-            if ($accountHolder === '') {
-                throw ValidationException::withMessages([
-                    'substitute_schedules' =>
-                    "Atas nama rekening untuk tanggal {$date} wajib diisi.",
-                ]);
+                if ($accountNumber === '') {
+                    throw ValidationException::withMessages([
+                        'substitute_schedules' =>
+                        "Nomor rekening pengganti untuk tanggal {$date} wajib diisi jika biaya ditanggung perusahaan.",
+                    ]);
+                }
+
+                if ($accountHolder === '') {
+                    throw ValidationException::withMessages([
+                        'substitute_schedules' =>
+                        "Atas nama rekening untuk tanggal {$date} wajib diisi jika biaya ditanggung perusahaan.",
+                    ]);
+                }
+
+                $companyPaidSubstituteDays++;
+            } else {
+                // Jika dibayar pemohon, data rekening tidak diperlukan.
+                $bankName = '';
+                $accountNumber = '';
+                $accountHolder = '';
             }
 
             if (! in_array(
@@ -877,10 +984,11 @@ class LeaveRequestController extends Controller
                     'schedule_date' => $date,
                     'substitute_name' => $name,
                     'substitute_whatsapp' => $whatsapp,
-                    'substitute_address' => $address,
-                    'substitute_bank_name' => $bankName,
-                    'substitute_bank_account_number' => $accountNumber,
-                    'substitute_bank_account_holder' => $accountHolder,
+                    'substitute_fee_payer' => $feePayer,
+                    'substitute_address' => null,
+                    'substitute_bank_name' => $bankName !== '' ? $bankName : null,
+                    'substitute_bank_account_number' => $accountNumber !== '' ? $accountNumber : null,
+                    'substitute_bank_account_holder' => $accountHolder !== '' ? $accountHolder : null,
                     'schedule_type' => 'full_shift',
                     'work_shift_id' => $schedule['work_shift_id'],
                     'start_time' => null,
@@ -911,15 +1019,36 @@ class LeaveRequestController extends Controller
                 'schedule_date' => $date,
                 'substitute_name' => $name,
                 'substitute_whatsapp' => $whatsapp,
-                'substitute_address' => $address,
-                'substitute_bank_name' => $bankName,
-                'substitute_bank_account_number' => $accountNumber,
-                'substitute_bank_account_holder' => $accountHolder,
+                'substitute_fee_payer' => $feePayer,
+                'substitute_address' => null,
+                'substitute_bank_name' => $bankName !== '' ? $bankName : null,
+                'substitute_bank_account_number' => $accountNumber !== '' ? $accountNumber : null,
+                'substitute_bank_account_holder' => $accountHolder !== '' ? $accountHolder : null,
                 'schedule_type' => 'partial_hours',
                 'work_shift_id' => null,
                 'start_time' => $startTime,
                 'end_time' => $endTime,
             ];
+        }
+
+        if (
+            $annualLeaveDeductedDays > 0
+            && $companyPaidSubstituteDays !== $annualLeaveDeductedDays
+        ) {
+            throw ValidationException::withMessages([
+                'substitute_schedules' =>
+                "Pengajuan memakai {$annualLeaveDeductedDays} hari cuti tahunan, sehingga harus ada tepat {$annualLeaveDeductedDays} hari pengganti dengan biaya Perusahaan. Saat ini {$companyPaidSubstituteDays} hari.",
+            ]);
+        }
+
+        if (
+            $annualLeaveDeductedDays === 0
+            && $companyPaidSubstituteDays > 0
+        ) {
+            throw ValidationException::withMessages([
+                'substitute_schedules' =>
+                'Biaya Perusahaan tidak dapat dipilih karena pengajuan ini tidak menggunakan saldo cuti tahunan.',
+            ]);
         }
 
         if (count($normalized) === 0) {
@@ -1023,14 +1152,21 @@ class LeaveRequestController extends Controller
         Carbon $startDate,
         Carbon $endDate
     ): int {
+        /*
+         * Semua tanggal dalam rentang cuti dihitung.
+         *
+         * Contoh:
+         * 28/08/2026 s.d. 30/08/2026 = 3 hari,
+         * termasuk hari Minggu.
+         *
+         * Nama method dipertahankan supaya tidak perlu mengubah
+         * pemanggilan kode lama yang sudah berjalan.
+         */
         $cursor = $startDate->copy();
         $total = 0;
 
         while ($cursor->lte($endDate)) {
-            if (! $cursor->isSunday()) {
-                $total++;
-            }
-
+            $total++;
             $cursor->addDay();
         }
 

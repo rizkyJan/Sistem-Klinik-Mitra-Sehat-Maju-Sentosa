@@ -16,6 +16,7 @@ class LeaveRequestSubstituteSchedule extends Model
 
         'substitute_name',
         'substitute_whatsapp',
+        'substitute_fee_payer',
         'substitute_address',
 
         'substitute_bank_name',

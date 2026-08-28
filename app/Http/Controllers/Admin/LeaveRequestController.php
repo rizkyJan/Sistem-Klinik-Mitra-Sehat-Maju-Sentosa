@@ -341,6 +341,22 @@ class LeaveRequestController extends Controller
 
                     /*
                     |--------------------------------------------------------------------------
+                    | Validasi Konfirmasi Pengganti Mandiri untuk Izin Sakit
+                    |--------------------------------------------------------------------------
+                    */
+                    if (
+                        $request->self_replacement_days > 0
+                        &&
+                        ! $request->self_replacement_consent
+                    ) {
+                        throw new \RuntimeException(
+                            'Pengajuan memiliki hari pengganti mandiri, tetapi konfirmasi karyawan belum tercatat. Pengajuan belum dapat disetujui.'
+                        );
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
                     | Potong Saldo Cuti Tahunan
                     |--------------------------------------------------------------------------
                     |

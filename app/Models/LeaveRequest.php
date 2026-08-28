@@ -103,6 +103,11 @@ class LeaveRequest extends Model
         'rejection_reason',
 
         'unpaid_days',
+
+        'self_replacement_days',
+        'self_replacement_consent',
+        'self_replacement_consent_at',
+
         'salary_deduction_consent',
         'salary_deduction_consent_at',
     ];
@@ -131,6 +136,10 @@ class LeaveRequest extends Model
 
             'rejected_at' => 'datetime',
             'unpaid_days' => 'integer',
+
+            'self_replacement_days' => 'integer',
+            'self_replacement_consent' => 'boolean',
+            'self_replacement_consent_at' => 'datetime',
 
             'salary_deduction_consent' => 'boolean',
 

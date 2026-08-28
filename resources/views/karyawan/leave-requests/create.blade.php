@@ -346,7 +346,9 @@
                                 </div>
 
                                 <div class="grid grid-cols-2 px-4 py-3">
-                                    <span class="text-sm text-slate-500">
+                                    <span
+                                        id="uncoveredDaysLabel"
+                                        class="text-sm text-slate-500">
                                         Hari Tidak Dibayar
                                     </span>
                                     <span
@@ -390,6 +392,141 @@
                         </div>
 
 
+                        <div
+                            id="flexibleHandlingSection"
+                            class="hidden rounded-xl border border-blue-200 bg-blue-50 p-5">
+
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
+                                    <h3
+                                        id="flexibleHandlingTitle"
+                                        class="font-semibold text-blue-900">
+                                        Pembagian Hari Perizinan
+                                    </h3>
+
+                                    <p
+                                        id="flexibleHandlingDescription"
+                                        class="mt-1 text-sm leading-relaxed text-blue-700">
+                                        Tentukan berapa hari yang ingin menggunakan saldo cuti tahunan.
+                                        Sisa hari otomatis menjadi tanggung jawab mencari pengganti
+                                        dan membayar pengganti secara mandiri.
+                                    </p>
+                                </div>
+
+                                <div class="rounded-lg bg-white px-3 py-2 text-right shadow-sm">
+                                    <p class="text-xs text-slate-400">Saldo cuti tersedia</p>
+                                    <p class="font-bold text-blue-700">
+                                        {{ $annualLeaveAvailableDays }} hari
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-5 grid gap-4 md:grid-cols-2">
+                                <div class="rounded-xl border border-blue-100 bg-white p-4">
+                                    <label
+                                        for="excessAnnualLeaveDays"
+                                        class="block text-sm font-semibold text-slate-800">
+                                        Gunakan Cuti Tahunan
+                                    </label>
+
+                                    <div class="mt-3 flex items-center gap-3">
+                                        <input
+                                            type="number"
+                                            id="excessAnnualLeaveDays"
+                                            name="excess_annual_leave_days"
+                                            min="0"
+                                            step="1"
+                                            value="{{ old('excess_annual_leave_days', old('sick_annual_leave_days', 0)) }}"
+                                            class="w-28 rounded-lg border-slate-300 text-center focus:border-blue-500 focus:ring-blue-500">
+
+                                        <span class="text-sm text-slate-500">hari</span>
+                                    </div>
+
+                                    <p
+                                        id="flexibleAnnualMaxText"
+                                        class="mt-2 text-xs text-slate-500">
+                                        Maksimal menyesuaikan jumlah hari yang perlu dibagi dan saldo cuti.
+                                    </p>
+
+                                    @error('excess_annual_leave_days')
+                                    <p class="mt-2 text-sm text-red-600">
+                                        {{ $message }}
+                                    </p>
+                                    @enderror
+
+                                    @error('sick_annual_leave_days')
+                                    <p class="mt-2 text-sm text-red-600">
+                                        {{ $message }}
+                                    </p>
+                                    @enderror
+                                </div>
+
+                                <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                                    <p class="text-sm font-semibold text-amber-900">
+                                        Cari Pengganti & Biaya Mandiri
+                                    </p>
+
+                                    <p
+                                        id="flexibleSelfReplacementDays"
+                                        class="mt-3 text-3xl font-bold text-amber-700">
+                                        0 hari
+                                    </p>
+
+                                    <p class="mt-2 text-xs leading-relaxed text-amber-700">
+                                        Untuk hari ini nama pengganti tidak wajib dimasukkan ke sistem.
+                                        Koordinasi pengganti dan pembayarannya menjadi tanggung jawab pemohon.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="mt-5 rounded-xl border border-blue-200 bg-white p-4">
+                                <p class="text-sm font-semibold text-blue-900">
+                                    Ketentuan biaya pengganti
+                                </p>
+
+                                <div class="mt-2 space-y-1 text-sm leading-relaxed text-blue-700">
+                                    <p>
+                                        • Hari yang menggunakan <strong>cuti tahunan</strong>:
+                                        pengganti dicatat di sistem dan biaya dibayar <strong>Perusahaan</strong>.
+                                    </p>
+                                    <p>
+                                        • Hari yang <strong>tidak menggunakan cuti tahunan</strong>:
+                                        pengganti dan biaya menjadi tanggung jawab <strong>Saya / Pemohon</strong>.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div
+                                id="selfReplacementConsentContainer"
+                                class="mt-5 hidden rounded-xl border border-amber-300 bg-amber-100/70 p-4">
+                                <label class="flex cursor-pointer items-start gap-3">
+                                    <input
+                                        type="checkbox"
+                                        id="selfReplacementConsent"
+                                        name="self_replacement_consent"
+                                        value="1"
+                                        @checked(old('self_replacement_consent'))
+                                        class="mt-1 rounded border-amber-400 text-amber-600 focus:ring-amber-500">
+
+                                    <div>
+                                        <p class="text-sm font-semibold text-amber-900">
+                                            Konfirmasi Pengganti Mandiri
+                                        </p>
+                                        <p
+                                            id="selfReplacementConsentText"
+                                            class="mt-1 text-sm leading-relaxed text-amber-800"></p>
+                                    </div>
+                                </label>
+                            </div>
+
+                            @error('self_replacement_consent')
+                            <p class="mt-2 text-sm text-red-600">
+                                {{ $message }}
+                            </p>
+                            @enderror
+                        </div>
+
+
                         <div>
                             <label class="mb-2 block text-sm font-medium">
                                 Alasan / Keperluan
@@ -416,7 +553,7 @@
                 <div class="border-t border-slate-200"></div>
 
 
-                <section>
+                <section id="generalSubstituteQuestion">
                     <h2 class="font-semibold text-slate-800">
                         Pengganti
                     </h2>
@@ -450,6 +587,12 @@
                             </span>
                         </label>
                     </div>
+
+                    @error('has_substitute')
+                    <p class="mt-2 text-sm text-red-600">
+                        {{ $message }}
+                    </p>
+                    @enderror
                 </section>
 
 
@@ -463,6 +606,20 @@
 
                         <p class="mt-1 text-sm text-slate-500">
                             Centang hanya tanggal yang membutuhkan pengganti. Orang pengganti boleh berbeda pada setiap hari.
+                        </p>
+                    </div>
+
+
+                    <div
+                        id="companySubstituteRequirement"
+                        class="hidden rounded-xl border border-indigo-200 bg-indigo-50 p-4">
+                        <p class="text-sm font-semibold text-indigo-900">
+                            Pengganti yang Dibayar Perusahaan
+                        </p>
+
+                        <p
+                            id="companySubstituteRequirementText"
+                            class="mt-1 text-sm leading-relaxed text-indigo-700">
                         </p>
                     </div>
 
@@ -660,10 +817,24 @@ fn ($shift) => [
         const previewCoveredDays = document.getElementById('previewCoveredDays');
         const previewAnnualDays = document.getElementById('previewAnnualDays');
         const previewUnpaidDays = document.getElementById('previewUnpaidDays');
+        const uncoveredDaysLabel = document.getElementById('uncoveredDaysLabel');
         const salaryConsentContainer = document.getElementById('salaryConsentContainer');
         const salaryDeductionConsent = document.getElementById('salaryDeductionConsent');
         const salaryConsentText = document.getElementById('salaryConsentText');
 
+        const flexibleHandlingSection = document.getElementById('flexibleHandlingSection');
+        const flexibleHandlingTitle = document.getElementById('flexibleHandlingTitle');
+        const flexibleHandlingDescription = document.getElementById('flexibleHandlingDescription');
+        const excessAnnualLeaveDays = document.getElementById('excessAnnualLeaveDays');
+        const flexibleAnnualMaxText = document.getElementById('flexibleAnnualMaxText');
+        const flexibleSelfReplacementDays = document.getElementById('flexibleSelfReplacementDays');
+        const selfReplacementConsentContainer = document.getElementById('selfReplacementConsentContainer');
+        const selfReplacementConsent = document.getElementById('selfReplacementConsent');
+        const selfReplacementConsentText = document.getElementById('selfReplacementConsentText');
+
+        const generalSubstituteQuestion = document.getElementById('generalSubstituteQuestion');
+        const companySubstituteRequirement = document.getElementById('companySubstituteRequirement');
+        const companySubstituteRequirementText = document.getElementById('companySubstituteRequirementText');
         const substituteSection = document.getElementById('substituteSection');
         const scheduleContainer = document.getElementById('scheduleContainer');
         const scheduleHint = document.getElementById('scheduleHint');
@@ -675,6 +846,8 @@ fn ($shift) => [
 
         let annualRequestIsValid = true;
         let unpaidConsentRequired = false;
+        let selfReplacementConsentRequired = false;
+        let companyPayerIsValid = true;
 
 
         const oldScheduleMap = {};
@@ -700,11 +873,16 @@ fn ($shift) => [
 
 
         function updateSubmitState() {
-            const consentValid = !unpaidConsentRequired ||
+            const salaryConsentValid = !unpaidConsentRequired ||
                 salaryDeductionConsent.checked;
 
+            const replacementConsentValid = !selfReplacementConsentRequired ||
+                selfReplacementConsent.checked;
+
             submitPermissionButton.disabled = !annualRequestIsValid ||
-                !consentValid;
+                !salaryConsentValid ||
+                !replacementConsentValid ||
+                !companyPayerIsValid;
         }
 
 
@@ -736,18 +914,14 @@ fn ($shift) => [
                 return 0;
             }
 
-            let total = 0;
-            const cursor = new Date(start.getTime());
-
-            while (cursor <= end) {
-                if (cursor.getDay() !== 0) {
-                    total++;
-                }
-
-                cursor.setDate(cursor.getDate() + 1);
-            }
-
-            return total;
+            /*
+             * Semua tanggal dihitung secara inklusif.
+             *
+             * Contoh:
+             * 28/08/2026 - 30/08/2026 = 3 hari,
+             * termasuk hari Minggu.
+             */
+            return Math.floor((end - start) / 86400000) + 1;
         }
 
 
@@ -968,7 +1142,20 @@ fn ($shift) => [
                 showAnnualLeaveMessage(
                     'error',
                     'Periode tidak dapat digunakan',
-                    'Periode yang dipilih tidak memiliki hari kerja yang dihitung sebagai cuti tahunan.'
+                    'Periode cuti yang dipilih tidak valid.'
+                );
+
+                updateSubmitState();
+                return;
+            }
+
+            if (requestedDays > 3) {
+                annualRequestIsValid = false;
+
+                showAnnualLeaveMessage(
+                    'error',
+                    'Maksimal 3 hari per pengajuan',
+                    `Satu kali pengajuan cuti tahunan maksimal 3 hari. Semua tanggal dalam rentang ikut dihitung. Periode yang dipilih menggunakan ${requestedDays} hari cuti.`
                 );
 
                 updateSubmitState();
@@ -1001,72 +1188,131 @@ fn ($shift) => [
         }
 
 
-        function updateStandardBreakdown(
-            totalDays,
-            policyDays,
-            permissionName,
-            isOther = false
-        ) {
-            const coveredDays = Math.min(
-                totalDays,
-                policyDays
-            );
+        function annualLeaveCanCoverFlexibleDays() {
+            if (
+                !annualLeaveEligible ||
+                annualLeaveAvailableDays <= 0 ||
+                !startDate.value ||
+                !endDate.value
+            ) {
+                return false;
+            }
 
+            if (
+                annualLeaveEligibleDate &&
+                startDate.value < annualLeaveEligibleDate
+            ) {
+                return false;
+            }
+
+            const start = new Date(startDate.value + 'T00:00:00');
+            const end = new Date(endDate.value + 'T00:00:00');
+
+            return end >= start &&
+                start.getFullYear() === end.getFullYear();
+        }
+
+
+        function updateFlexibleBreakdown(
+            totalDays,
+            coveredDays,
+            permissionName,
+            coveredLabel,
+            description
+        ) {
             const excessDays = Math.max(
                 0,
-                totalDays - policyDays
+                totalDays - coveredDays
             );
 
+            uncoveredDaysLabel.textContent =
+                'Cari Pengganti & Biaya Mandiri';
+
+            flexibleHandlingSection.classList.add('hidden');
+            selfReplacementConsentContainer.classList.add('hidden');
+            selfReplacementConsentRequired = false;
+
             if (excessDays <= 0) {
+                excessAnnualLeaveDays.value = '0';
+                flexibleSelfReplacementDays.textContent = '0 hari';
+                updateFeePayerAvailability();
                 updateSubmitState();
                 return;
             }
 
-            const annualDays = annualLeaveEligible ?
+            const maxAnnualDays = annualLeaveCanCoverFlexibleDays() ?
                 Math.min(
                     excessDays,
                     annualLeaveAvailableDays
                 ) :
                 0;
 
-            const unpaidDays = Math.max(
-                0,
-                excessDays - annualDays
+            excessAnnualLeaveDays.max = String(maxAnnualDays);
+
+            let selectedAnnualDays = Number.parseInt(
+                excessAnnualLeaveDays.value || '0',
+                10
             );
 
-            coveredDaysLabel.textContent = isOther ?
-                'Hak Khusus Klinik' :
-                'Hak dari Klinik';
+            if (
+                Number.isNaN(selectedAnnualDays) ||
+                selectedAnnualDays < 0
+            ) {
+                selectedAnnualDays = 0;
+            }
 
+            if (selectedAnnualDays > maxAnnualDays) {
+                selectedAnnualDays = maxAnnualDays;
+                excessAnnualLeaveDays.value = String(maxAnnualDays);
+            }
+
+            const selfReplacementDays = Math.max(
+                0,
+                excessDays - selectedAnnualDays
+            );
+
+            coveredDaysLabel.textContent = coveredLabel;
             previewTotalDays.textContent = `${totalDays} hari`;
             previewCoveredDays.textContent = `${coveredDays} hari`;
-            previewAnnualDays.textContent = `${annualDays} hari`;
-            previewUnpaidDays.textContent = `${unpaidDays} hari`;
+            previewAnnualDays.textContent = `${selectedAnnualDays} hari`;
+            previewUnpaidDays.textContent = `${selfReplacementDays} hari`;
 
-            if (isOther) {
-                excessBreakdownDescription.textContent =
-                    `${permissionName} tidak memiliki jatah hari khusus. Seluruh hari pengajuan akan menggunakan sisa cuti tahunan terlebih dahulu.`;
-            } else {
-                excessBreakdownDescription.textContent =
-                    `${permissionName} memiliki hak ${policyDays} hari. Hari yang melebihi hak akan menggunakan sisa cuti tahunan terlebih dahulu.`;
-            }
+            excessBreakdownDescription.textContent =
+                description +
+                ` Dari ${excessDays} hari yang perlu dibagi, ` +
+                `${selectedAnnualDays} hari menggunakan cuti tahunan dan ` +
+                `${selfReplacementDays} hari menjadi tanggung jawab pengganti serta biaya mandiri.`;
+
+            flexibleHandlingTitle.textContent =
+                `Pembagian Hari ${permissionName}`;
+
+            flexibleHandlingDescription.textContent =
+                `Tentukan berapa dari ${excessDays} hari yang ingin menggunakan saldo cuti tahunan. ` +
+                `Hari yang memakai cuti tahunan harus memiliki data pengganti dan biaya dibayar Perusahaan. ` +
+                `Sisa hari otomatis menjadi tanggung jawab Saya / Pemohon.`;
+
+            flexibleAnnualMaxText.textContent =
+                maxAnnualDays > 0 ?
+                `Maksimal ${maxAnnualDays} hari dari ${excessDays} hari. Saldo cuti yang dapat diajukan saat ini: ${annualLeaveAvailableDays} hari.` :
+                'Cuti tahunan tidak dapat digunakan untuk periode ini karena belum memenuhi masa kerja, saldo habis/belum tersedia, atau periode melewati tahun.';
+
+            flexibleSelfReplacementDays.textContent =
+                `${selfReplacementDays} hari`;
 
             excessBreakdown.classList.remove('hidden');
+            flexibleHandlingSection.classList.remove('hidden');
 
-            if (unpaidDays > 0) {
-                unpaidConsentRequired = true;
+            if (selfReplacementDays > 0) {
+                selfReplacementConsentRequired = true;
 
-                if (annualDays > 0) {
-                    salaryConsentText.textContent =
-                        `Saya memahami dan menyetujui bahwa ${annualDays} hari akan diajukan menggunakan sisa cuti tahunan dan ${unpaidDays} hari sisanya diajukan sebagai hari tidak dibayar / potong gaji apabila pengajuan disetujui oleh Admin/Kabid.`;
-                } else {
-                    salaryConsentText.textContent =
-                        `Saya memahami dan menyetujui bahwa ${unpaidDays} hari diajukan sebagai hari tidak dibayar / potong gaji apabila pengajuan disetujui oleh Admin/Kabid.`;
-                }
+                selfReplacementConsentText.textContent =
+                    `Saya memahami bahwa ${selfReplacementDays} hari pada pengajuan ${permissionName.toLowerCase()} tidak menggunakan cuti tahunan. ` +
+                    `Saya bertanggung jawab mencari pengganti sendiri dan menyelesaikan biaya pengganti secara pribadi.`;
 
-                salaryConsentContainer.classList.remove('hidden');
+                selfReplacementConsentContainer.classList.remove('hidden');
             }
 
+            updateFeePayerAvailability();
             updateSubmitState();
         }
 
@@ -1127,71 +1373,42 @@ fn ($shift) => [
                     ) + 1;
             }
 
-            const excessDays = Math.max(
-                0,
-                totalDays - coveredDays
-            );
-
-            if (excessDays <= 0) {
-                updateSubmitState();
-                return;
-            }
-
-            const annualDays = annualLeaveEligible ?
-                Math.min(
-                    excessDays,
-                    annualLeaveAvailableDays
-                ) :
-                0;
-
-            const unpaidDays = Math.max(
-                0,
-                excessDays - annualDays
-            );
-
-            coveredDaysLabel.textContent =
-                'Hak Cuti Melahirkan';
-
-            previewTotalDays.textContent = `${totalDays} hari`;
-            previewCoveredDays.textContent = `${coveredDays} hari`;
-            previewAnnualDays.textContent = `${annualDays} hari`;
-            previewUnpaidDays.textContent = `${unpaidDays} hari`;
-
-            excessBreakdownDescription.textContent =
+            updateFlexibleBreakdown(
+                totalDays,
+                coveredDays,
+                'Cuti Melahirkan',
+                'Hak Cuti Melahirkan',
                 `Periode hak cuti melahirkan adalah ${formatSimpleDate(
-                toDateString(policyStart)
-            )} sampai ${formatSimpleDate(
-                toDateString(policyEnd)
-            )}. Hari yang Anda tambahkan di luar periode tersebut akan menggunakan sisa cuti tahunan terlebih dahulu.`;
-
-            excessBreakdown.classList.remove('hidden');
-
-            if (unpaidDays > 0) {
-                unpaidConsentRequired = true;
-
-                if (annualDays > 0) {
-                    salaryConsentText.textContent =
-                        `Saya memahami dan menyetujui bahwa ${annualDays} hari tambahan akan menggunakan sisa cuti tahunan dan ${unpaidDays} hari sisanya diajukan sebagai hari tidak dibayar / potong gaji apabila pengajuan disetujui oleh Admin/Kabid.`;
-                } else {
-                    salaryConsentText.textContent =
-                        `Saya memahami dan menyetujui bahwa ${unpaidDays} hari tambahan diajukan sebagai hari tidak dibayar / potong gaji apabila pengajuan disetujui oleh Admin/Kabid.`;
-                }
-
-                salaryConsentContainer.classList.remove('hidden');
-            }
-
-            updateSubmitState();
+                    toDateString(policyStart)
+                )} sampai ${formatSimpleDate(
+                    toDateString(policyEnd)
+                )}.`
+            );
         }
 
 
         function updateExcessBreakdown() {
             excessBreakdown.classList.add('hidden');
             salaryConsentContainer.classList.add('hidden');
+            flexibleHandlingSection.classList.add('hidden');
+            selfReplacementConsentContainer.classList.add('hidden');
+
             unpaidConsentRequired = false;
+            selfReplacementConsentRequired = false;
+            uncoveredDaysLabel.textContent =
+                'Cari Pengganti & Biaya Mandiri';
 
             const code = getPermissionCode();
 
-            if (code === 'annual_leave' || !code) {
+            if (!code) {
+                updateFeePayerAvailability();
+                updateSubmitState();
+                return;
+            }
+
+            if (code === 'annual_leave') {
+                excessAnnualLeaveDays.value = '0';
+                updateFeePayerAvailability();
                 updateSubmitState();
                 return;
             }
@@ -1204,47 +1421,56 @@ fn ($shift) => [
             const totalDays = getNormalCalendarDays();
 
             if (totalDays <= 0) {
+                updateFeePayerAvailability();
                 updateSubmitState();
                 return;
             }
 
             if (code === 'sick') {
-                updateStandardBreakdown(
+                updateFlexibleBreakdown(
                     totalDays,
-                    1,
-                    'Izin sakit'
+                    Math.min(totalDays, 1),
+                    'Izin Sakit',
+                    'Hak Izin Sakit',
+                    'Izin sakit memiliki hak 1 hari sesuai ketentuan.'
                 );
                 return;
             }
 
             if (code === 'marriage') {
-                updateStandardBreakdown(
+                updateFlexibleBreakdown(
                     totalDays,
-                    3,
-                    'Izin menikah'
+                    Math.min(totalDays, 3),
+                    'Izin Menikah',
+                    'Hak Izin Menikah',
+                    'Izin menikah memiliki hak 3 hari sesuai ketentuan.'
                 );
                 return;
             }
 
             if (code === 'miscarriage') {
-                updateStandardBreakdown(
+                updateFlexibleBreakdown(
                     totalDays,
-                    7,
-                    'Cuti keguguran'
+                    Math.min(totalDays, 7),
+                    'Cuti Keguguran',
+                    'Hak Cuti Keguguran',
+                    'Cuti keguguran memiliki hak maksimal 7 hari sesuai ketentuan.'
                 );
                 return;
             }
 
             if (code === 'other') {
-                updateStandardBreakdown(
+                updateFlexibleBreakdown(
                     totalDays,
                     0,
-                    'Izin lainnya',
-                    true
+                    'Izin Lainnya',
+                    'Hak Khusus Klinik',
+                    'Izin lainnya tidak memiliki jatah hari khusus. Anda bebas menentukan berapa hari yang ingin menggunakan saldo cuti tahunan.'
                 );
                 return;
             }
 
+            updateFeePayerAvailability();
             updateSubmitState();
         }
 
@@ -1255,6 +1481,7 @@ fn ($shift) => [
             maternityFields.classList.add('hidden');
             maternityPolicyInfo.classList.add('hidden');
             doctorLetterFields.classList.add('hidden');
+            generalSubstituteQuestion.classList.remove('hidden');
 
             if (code === 'sick') {
                 doctorLetterFields.classList.remove('hidden');
@@ -1346,9 +1573,9 @@ fn ($shift) => [
                         substitute_whatsapp: card.querySelector(
                             '[data-substitute-whatsapp]'
                         )?.value || '',
-                        substitute_address: card.querySelector(
-                            '[data-substitute-address]'
-                        )?.value || '',
+                        substitute_fee_payer: card.querySelector(
+                            'input[data-fee-payer]:checked'
+                        )?.value || 'employee',
                         substitute_bank_name: card.querySelector(
                             '[data-substitute-bank-name]'
                         )?.value || '',
@@ -1411,6 +1638,219 @@ fn ($shift) => [
                     '[data-schedule-card]'
                 )
             ).filter(isCardSelected);
+        }
+
+
+        function getAnnualLeaveDaysForCurrentRequest() {
+            const code = getPermissionCode();
+
+            if (
+                !startDate.value ||
+                !endDate.value
+            ) {
+                return 0;
+            }
+
+            if (code === 'annual_leave') {
+                if (
+                    !annualLeaveEligible ||
+                    annualLeaveAvailableDays <= 0
+                ) {
+                    return 0;
+                }
+
+                const requested = countAnnualLeaveDays(
+                    startDate.value,
+                    endDate.value
+                );
+
+                return Math.max(
+                    0,
+                    Math.min(
+                        requested,
+                        annualLeaveAvailableDays,
+                        3
+                    )
+                );
+            }
+
+            if (!annualLeaveCanCoverFlexibleDays()) {
+                return 0;
+            }
+
+            const selected = Number.parseInt(
+                excessAnnualLeaveDays.value || '0',
+                10
+            );
+
+            if (Number.isNaN(selected) || selected < 0) {
+                return 0;
+            }
+
+            return selected;
+        }
+
+
+        function updateFeePayerFields(card) {
+            const selectedPayer = card.querySelector(
+                'input[data-fee-payer]:checked'
+            )?.value || 'employee';
+
+            const bankFields = card.querySelector(
+                '[data-company-bank-fields]'
+            );
+
+            const bankInputs = [
+                card.querySelector('[data-substitute-bank-name]'),
+                card.querySelector('[data-substitute-bank-account-number]'),
+                card.querySelector('[data-substitute-bank-account-holder]'),
+            ].filter(Boolean);
+
+            if (!bankFields) {
+                return;
+            }
+
+            if (selectedPayer === 'company' && isCardSelected(card)) {
+                bankFields.classList.remove('hidden');
+                bankInputs.forEach(function(input) {
+                    input.required = true;
+                });
+            } else {
+                bankFields.classList.add('hidden');
+                bankInputs.forEach(function(input) {
+                    input.required = false;
+                });
+            }
+        }
+
+
+        function updateFeePayerAvailability() {
+            const selectedCards = getSelectedCards();
+            const companyAllowance = getAnnualLeaveDaysForCurrentRequest();
+
+            const noSubstituteRadio = document.querySelector(
+                'input[name="has_substitute"][value="0"]'
+            );
+
+            const yesSubstituteRadio = document.querySelector(
+                'input[name="has_substitute"][value="1"]'
+            );
+
+            if (companyAllowance > 0) {
+                /*
+                 * Setiap hari yang memakai cuti tahunan wajib punya data
+                 * pengganti yang dibayar Perusahaan.
+                 */
+                if (yesSubstituteRadio) {
+                    yesSubstituteRadio.checked = true;
+                }
+
+                if (noSubstituteRadio) {
+                    noSubstituteRadio.disabled = true;
+                }
+
+                substituteSection.classList.remove('hidden');
+                companySubstituteRequirement.classList.remove('hidden');
+                companySubstituteRequirementText.textContent =
+                    `Pengajuan ini memakai ${companyAllowance} hari cuti tahunan. ` +
+                    `Pilih tepat ${companyAllowance} tanggal pengganti, isi nama/WhatsApp/jadwal, ` +
+                    `lalu pilih biaya "Perusahaan" dan lengkapi data rekening.`;
+            } else {
+                if (noSubstituteRadio) {
+                    noSubstituteRadio.disabled = false;
+                }
+
+                companySubstituteRequirement.classList.add('hidden');
+                companySubstituteRequirementText.textContent = '';
+            }
+
+            /*
+             * Jika jumlah pilihan Perusahaan melebihi jatah cuti karena
+             * tanggal / pembagian diubah, kelebihannya dikembalikan menjadi
+             * Saya / Pemohon.
+             */
+            let remainingCompanySlots = companyAllowance;
+
+            selectedCards.forEach(function(card) {
+                const companyRadio = card.querySelector(
+                    'input[data-company-fee-payer]'
+                );
+
+                const employeeRadio = card.querySelector(
+                    'input[data-fee-payer][value="employee"]'
+                );
+
+                if (!companyRadio || !employeeRadio) {
+                    return;
+                }
+
+                if (companyRadio.checked) {
+                    if (remainingCompanySlots > 0) {
+                        remainingCompanySlots--;
+                    } else {
+                        employeeRadio.checked = true;
+                        updateFeePayerFields(card);
+                    }
+                }
+            });
+
+            const companySelectedCount = selectedCards.filter(function(card) {
+                return card.querySelector(
+                    'input[data-company-fee-payer]'
+                )?.checked;
+            }).length;
+
+            /*
+             * Berbeda dari revisi sebelumnya yang hanya memakai batas
+             * "maksimal". Sekarang harus TEPAT sejumlah hari cuti tahunan,
+             * karena hari yang memakai cuti wajib memiliki nama pengganti.
+             */
+            companyPayerIsValid = companyAllowance > 0 ?
+                companySelectedCount === companyAllowance :
+                companySelectedCount === 0;
+
+            selectedCards.forEach(function(card) {
+                const companyRadio = card.querySelector(
+                    'input[data-company-fee-payer]'
+                );
+
+                const note = card.querySelector(
+                    '[data-company-fee-note]'
+                );
+
+                if (!companyRadio) {
+                    return;
+                }
+
+                if (companyAllowance <= 0) {
+                    companyRadio.disabled = true;
+
+                    if (note) {
+                        note.textContent =
+                            'Perusahaan hanya dapat dipilih pada hari yang menggunakan saldo cuti tahunan.';
+                        note.className =
+                            'mt-3 text-xs leading-relaxed text-amber-700';
+                    }
+                } else {
+                    const isCurrentCompany = companyRadio.checked;
+
+                    companyRadio.disabled = !isCurrentCompany &&
+                        companySelectedCount >= companyAllowance;
+
+                    if (note) {
+                        note.textContent =
+                            `Wajib ada tepat ${companyAllowance} hari dengan biaya Perusahaan karena pengajuan memakai ${companyAllowance} hari cuti tahunan. Saat ini dipilih ${companySelectedCount} hari.`;
+                        note.className =
+                            companySelectedCount === companyAllowance ?
+                            'mt-3 text-xs leading-relaxed text-emerald-700' :
+                            'mt-3 text-xs leading-relaxed text-blue-700';
+                    }
+                }
+
+                updateFeePayerFields(card);
+            });
+
+            updateSubmitState();
         }
 
 
@@ -1491,6 +1931,7 @@ fn ($shift) => [
                 partial.classList.remove('hidden');
             }
 
+            updateFeePayerFields(card);
             updateBulkButtons();
         }
 
@@ -1506,6 +1947,8 @@ fn ($shift) => [
                 toggleAllSubstituteDays.classList.add('hidden');
                 copyFirstSubstituteData.classList.add('hidden');
                 copyFirstSchedule.classList.add('hidden');
+                companyPayerIsValid = true;
+                updateSubmitState();
                 return;
             }
 
@@ -1522,6 +1965,8 @@ fn ($shift) => [
                 toggleAllSubstituteDays.classList.add('hidden');
                 copyFirstSubstituteData.classList.add('hidden');
                 copyFirstSchedule.classList.add('hidden');
+                companyPayerIsValid = true;
+                updateSubmitState();
                 return;
             }
 
@@ -1553,6 +1998,17 @@ fn ($shift) => [
                     saved.schedule_type === 'partial_hours' ?
                     'checked' :
                     '';
+
+                const feePayer =
+                    saved.substitute_fee_payer === 'company' ?
+                    'company' :
+                    'employee';
+
+                const employeeFeeChecked =
+                    feePayer === 'employee' ? 'checked' : '';
+
+                const companyFeeChecked =
+                    feePayer === 'company' ? 'checked' : '';
 
                 const card = document.createElement('div');
 
@@ -1649,60 +2105,115 @@ fn ($shift) => [
                                     class="w-full rounded-lg border-slate-300"
                                 >
                             </div>
+                        </div>
 
-                            <div class="md:col-span-2">
-                                <label class="mb-2 block text-sm font-medium">
-                                    Alamat *
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <p class="text-sm font-semibold text-slate-800">
+                                Biaya pengganti dibayar oleh:
+                            </p>
+
+                            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                                <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-white p-3">
+                                    <input
+                                        type="radio"
+                                        data-fee-payer
+                                        name="substitute_schedules[${index}][substitute_fee_payer]"
+                                        value="employee"
+                                        ${employeeFeeChecked}
+                                        class="mt-1 border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    >
+
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-800">
+                                            Saya / Pemohon
+                                        </p>
+                                        <p class="mt-1 text-xs leading-relaxed text-slate-500">
+                                            Biaya pengganti diselesaikan sendiri oleh karyawan yang mengajukan izin.
+                                        </p>
+                                    </div>
                                 </label>
 
-                                <textarea
-                                    data-substitute-address
-                                    name="substitute_schedules[${index}][substitute_address]"
-                                    rows="2"
-                                    class="w-full rounded-lg border-slate-300"
-                                >${escapeHtml(saved.substitute_address || '')}</textarea>
+                                <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-white p-3">
+                                    <input
+                                        type="radio"
+                                        data-fee-payer
+                                        data-company-fee-payer
+                                        name="substitute_schedules[${index}][substitute_fee_payer]"
+                                        value="company"
+                                        ${companyFeeChecked}
+                                        class="mt-1 border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    >
+
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-800">
+                                            Perusahaan
+                                        </p>
+                                        <p class="mt-1 text-xs leading-relaxed text-slate-500">
+                                            Hanya tersedia jika pengajuan memakai saldo cuti tahunan.
+                                        </p>
+                                    </div>
+                                </label>
                             </div>
 
-                            <div>
-                                <label class="mb-2 block text-sm font-medium">
-                                    Nama Bank *
-                                </label>
+                            <p
+                                data-company-fee-note
+                                class="mt-3 text-xs leading-relaxed text-slate-500"
+                            ></p>
 
-                                <input
-                                    type="text"
-                                    data-substitute-bank-name
-                                    name="substitute_schedules[${index}][substitute_bank_name]"
-                                    value="${escapeHtml(saved.substitute_bank_name || '')}"
-                                    class="w-full rounded-lg border-slate-300"
-                                >
-                            </div>
+                            <div
+                                data-company-bank-fields
+                                class="${feePayer === 'company' ? '' : 'hidden'} mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4"
+                            >
+                                <p class="text-sm font-semibold text-blue-900">
+                                    Data Rekening Pengganti
+                                </p>
+                                <p class="mt-1 text-xs text-blue-700">
+                                    Wajib diisi karena biaya pengganti akan dibayarkan oleh perusahaan.
+                                </p>
 
-                            <div>
-                                <label class="mb-2 block text-sm font-medium">
-                                    Nomor Rekening *
-                                </label>
+                                <div class="mt-4 grid gap-4 md:grid-cols-2">
+                                    <div>
+                                        <label class="mb-2 block text-sm font-medium">
+                                            Nama Bank *
+                                        </label>
 
-                                <input
-                                    type="text"
-                                    data-substitute-bank-account-number
-                                    name="substitute_schedules[${index}][substitute_bank_account_number]"
-                                    value="${escapeHtml(saved.substitute_bank_account_number || '')}"
-                                    class="w-full rounded-lg border-slate-300"
-                                >
-                            </div>
+                                        <input
+                                            type="text"
+                                            data-substitute-bank-name
+                                            name="substitute_schedules[${index}][substitute_bank_name]"
+                                            value="${escapeHtml(saved.substitute_bank_name || '')}"
+                                            class="w-full rounded-lg border-slate-300"
+                                        >
+                                    </div>
 
-                            <div class="md:col-span-2">
-                                <label class="mb-2 block text-sm font-medium">
-                                    Atas Nama Rekening *
-                                </label>
+                                    <div>
+                                        <label class="mb-2 block text-sm font-medium">
+                                            Nomor Rekening *
+                                        </label>
 
-                                <input
-                                    type="text"
-                                    data-substitute-bank-account-holder
-                                    name="substitute_schedules[${index}][substitute_bank_account_holder]"
-                                    value="${escapeHtml(saved.substitute_bank_account_holder || '')}"
-                                    class="w-full rounded-lg border-slate-300"
-                                >
+                                        <input
+                                            type="text"
+                                            data-substitute-bank-account-number
+                                            name="substitute_schedules[${index}][substitute_bank_account_number]"
+                                            value="${escapeHtml(saved.substitute_bank_account_number || '')}"
+                                            class="w-full rounded-lg border-slate-300"
+                                        >
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <label class="mb-2 block text-sm font-medium">
+                                            Atas Nama Rekening *
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            data-substitute-bank-account-holder
+                                            name="substitute_schedules[${index}][substitute_bank_account_holder]"
+                                            value="${escapeHtml(saved.substitute_bank_account_holder || '')}"
+                                            class="w-full rounded-lg border-slate-300"
+                                        >
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -1813,6 +2324,7 @@ fn ($shift) => [
             });
 
             updateBulkButtons();
+            updateFeePayerAvailability();
         }
 
 
@@ -1852,6 +2364,13 @@ fn ($shift) => [
                         '0';
 
                     updateScheduleCard(card);
+                    updateFeePayerAvailability();
+                    return;
+                }
+
+                if (event.target.matches('input[data-fee-payer]')) {
+                    updateFeePayerFields(card);
+                    updateFeePayerAvailability();
                     return;
                 }
 
@@ -1896,6 +2415,7 @@ fn ($shift) => [
                 });
 
                 updateBulkButtons();
+                updateFeePayerAvailability();
             }
         );
 
@@ -1921,9 +2441,9 @@ fn ($shift) => [
                     whatsapp: first.querySelector(
                         '[data-substitute-whatsapp]'
                     )?.value || '',
-                    address: first.querySelector(
-                        '[data-substitute-address]'
-                    )?.value || '',
+                    feePayer: first.querySelector(
+                        'input[data-fee-payer]:checked'
+                    )?.value || 'employee',
                     bankName: first.querySelector(
                         '[data-substitute-bank-name]'
                     )?.value || '',
@@ -1951,9 +2471,21 @@ fn ($shift) => [
                         '[data-substitute-whatsapp]'
                     ).value = source.whatsapp;
 
-                    card.querySelector(
-                        '[data-substitute-address]'
-                    ).value = source.address;
+                    const feePayerRadio = card.querySelector(
+                        `input[data-fee-payer][value="${source.feePayer}"]`
+                    );
+
+                    if (feePayerRadio && !feePayerRadio.disabled) {
+                        feePayerRadio.checked = true;
+                    } else {
+                        const employeeRadio = card.querySelector(
+                            'input[data-fee-payer][value="employee"]'
+                        );
+
+                        if (employeeRadio) {
+                            employeeRadio.checked = true;
+                        }
+                    }
 
                     card.querySelector(
                         '[data-substitute-bank-name]'
@@ -1966,7 +2498,11 @@ fn ($shift) => [
                     card.querySelector(
                         '[data-substitute-bank-account-holder]'
                     ).value = source.accountHolder;
+
+                    updateFeePayerFields(card);
                 });
+
+                updateFeePayerAvailability();
             }
         );
 
@@ -2095,6 +2631,22 @@ fn ($shift) => [
 
 
         salaryDeductionConsent.addEventListener(
+            'change',
+            function() {
+                updateSubmitState();
+            }
+        );
+
+
+        excessAnnualLeaveDays.addEventListener(
+            'input',
+            function() {
+                updateExcessBreakdown();
+                renderSchedules();
+            }
+        );
+
+        selfReplacementConsent.addEventListener(
             'change',
             function() {
                 updateSubmitState();

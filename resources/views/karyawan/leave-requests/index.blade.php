@@ -280,132 +280,97 @@
                             class="min-w-[260px]
                                        px-6 py-4">
 
-                            @if(
+                            @php
+                            $hasSelfReplacement =
+                            $leave->self_replacement_days > 0;
+
+                            $hasRecordedSubstitute =
                             $leave->has_substitute
-                            )
+                            && $leave->substituteSchedules->count() > 0;
+                            @endphp
 
-                            <span
-                                class="rounded-full
-                                               bg-blue-50
-                                               px-2.5 py-1
-                                               text-xs font-medium
-                                               text-blue-700">
-                                Ada Pengganti
-                            </span>
+                            @if($hasSelfReplacement)
+                            <div>
+                                <span
+                                    class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                    Pengganti Mandiri
+                                </span>
 
-
-                            <p
-                                class="mt-2 text-sm
-                                               font-semibold
-                                               text-slate-700">
-                                {{ $leave
-                                            ->substitute_name }}
-                            </p>
-
-
-                            <p class="text-xs text-slate-400">
-
-                                {{ $leave
-                                            ->substituteSchedules
-                                            ->count() }}
-
-                                jadwal penggantian
-
-                            </p>
-
-
-                            <div class="mt-3 space-y-1">
-
-                                @foreach(
-                                $leave
-                                ->substituteSchedules
-                                ->take(3)
-                                as $schedule
-                                )
-
-                                <p
-                                    class="text-xs
-                                                       text-slate-500">
-
-                                    {{ $schedule
-                                                    ->schedule_date
-                                                    ->format('d/m') }}
-
-                                    •
-
-
-                                    @if(
-                                    $schedule
-                                    ->schedule_type
-                                    === 'full_shift'
-                                    )
-
-                                    {{ $schedule
-                                                        ->workShift
-                                                        ?->name
-                                                        ?? '-' }}
-
-                                    @else
-
-                                    {{ substr(
-                                                        $schedule
-                                                            ->start_time,
-                                                        0,
-                                                        5
-                                                    ) }}
-
-                                    -
-
-                                    {{ substr(
-                                                        $schedule
-                                                            ->end_time,
-                                                        0,
-                                                        5
-                                                    ) }}
-
-                                    @endif
-
+                                <p class="mt-2 text-sm font-semibold text-slate-700">
+                                    {{ $leave->self_replacement_days }} hari
                                 </p>
 
-                                @endforeach
-
-
-                                @if(
-                                $leave
-                                ->substituteSchedules
-                                ->count()
-                                > 3
-                                )
-
-                                <p
-                                    class="text-xs
-                                                       font-medium
-                                                       text-blue-600">
-                                    +
-
-                                    {{ $leave
-                                                    ->substituteSchedules
-                                                    ->count() - 3 }}
-
-                                    hari lainnya
+                                <p class="text-xs text-slate-400">
+                                    Biaya ditanggung pemohon; nama pengganti tidak wajib dicatat.
                                 </p>
 
+                                @if($leave->self_replacement_consent)
+                                <p class="mt-2 text-xs font-medium text-emerald-600">
+                                    ✓ Konfirmasi tanggung jawab sudah diberikan
+                                </p>
                                 @endif
-
                             </div>
+                            @endif
 
 
-                            @else
+                            @if($hasRecordedSubstitute)
+                            <div class="{{ $hasSelfReplacement ? 'mt-4 border-t border-slate-100 pt-4' : '' }}">
+                                <span
+                                    class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                                    Pengganti Tercatat
+                                </span>
 
+                                <p class="mt-2 text-sm font-semibold text-slate-700">
+                                    {{ $leave->substitute_name }}
+                                </p>
+
+                                <p class="text-xs text-slate-400">
+                                    {{ $leave->substituteSchedules->count() }}
+                                    jadwal penggantian
+                                </p>
+
+                                <div class="mt-3 space-y-1">
+                                    @foreach(
+                                    $leave->substituteSchedules->take(3)
+                                    as $schedule
+                                    )
+                                    <p class="text-xs text-slate-500">
+                                        {{ $schedule->schedule_date->format('d/m') }}
+                                        •
+
+                                        @if($schedule->schedule_type === 'full_shift')
+                                        {{ $schedule->workShift?->name ?? '-' }}
+                                        @else
+                                        {{ substr($schedule->start_time, 0, 5) }}
+                                        -
+                                        {{ substr($schedule->end_time, 0, 5) }}
+                                        @endif
+
+                                        @if($schedule->substitute_fee_payer === 'company')
+                                        • Biaya: Perusahaan
+                                        @elseif($schedule->substitute_fee_payer === 'employee')
+                                        • Biaya: Pemohon
+                                        @endif
+                                    </p>
+                                    @endforeach
+
+                                    @if($leave->substituteSchedules->count() > 3)
+                                    <p class="text-xs font-medium text-blue-600">
+                                        +
+                                        {{ $leave->substituteSchedules->count() - 3 }}
+                                        hari lainnya
+                                    </p>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+
+
+                            @if(! $hasSelfReplacement && ! $hasRecordedSubstitute)
                             <span
-                                class="rounded-full
-                                               bg-slate-100
-                                               px-2.5 py-1
-                                               text-xs
-                                               text-slate-600">
+                                class="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
                                 Tanpa Pengganti
                             </span>
-
                             @endif
 
                         </td>

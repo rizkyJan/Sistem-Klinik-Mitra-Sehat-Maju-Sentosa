@@ -597,7 +597,7 @@
 
                 <p class="mt-1 text-sm text-slate-500">
                     Ringkasan pembagian hari pengajuan berdasarkan hak perizinan,
-                    sisa cuti tahunan, dan hari yang tidak tercover.
+                    cuti tahunan, pengganti mandiri, dan hari tidak dibayar bila ada.
                 </p>
 
 
@@ -706,31 +706,41 @@
 
 
 
-                    {{-- Unpaid --}}
-                    @if(
-                    $leaveRequest
-                    ->unpaid_days
-                    > 0
-                    )
+                    {{-- Pengganti Mandiri --}}
+                    @if($leaveRequest->self_replacement_days > 0)
 
                     <div
-                        class="rounded-xl
-                               border border-rose-200
-                               bg-rose-50 p-4">
+                        class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+
+                        <p class="text-xs text-amber-600">
+                            Pengganti & Biaya Mandiri
+                        </p>
+
+                        <p class="mt-1 text-xl font-bold text-amber-800">
+                            {{ $leaveRequest->self_replacement_days }} hari
+                        </p>
+
+                        <p class="mt-1 text-xs leading-relaxed text-amber-700">
+                            Karyawan mencari pengganti dan menyelesaikan biaya pengganti secara pribadi.
+                        </p>
+
+                    </div>
+
+                    @endif
+
+
+                    {{-- Unpaid --}}
+                    @if($leaveRequest->unpaid_days > 0)
+
+                    <div
+                        class="rounded-xl border border-rose-200 bg-rose-50 p-4">
 
                         <p class="text-xs text-rose-600">
                             Hari Tidak Dibayar
                         </p>
 
-                        <p
-                            class="mt-1 text-xl
-                                   font-bold
-                                   text-rose-700">
-
-                            {{ $leaveRequest->unpaid_days }}
-
-                            hari
-
+                        <p class="mt-1 text-xl font-bold text-rose-700">
+                            {{ $leaveRequest->unpaid_days }} hari
                         </p>
 
                         <p class="mt-1 text-xs leading-relaxed text-rose-600">
@@ -740,30 +750,22 @@
                     </div>
 
                     @elseif(
-                    $leaveRequest
-                    ->excess_days
-                    > 0
+                    $leaveRequest->excess_days > 0
+                    && $leaveRequest->self_replacement_days === 0
                     )
 
-                    <div
-                        class="rounded-xl
-                               bg-emerald-50 p-4">
-
+                    <div class="rounded-xl bg-emerald-50 p-4">
                         <p class="text-xs text-emerald-600">
                             Sisa Tidak Tercover
                         </p>
 
-                        <p
-                            class="mt-1 text-xl
-                                   font-bold
-                                   text-emerald-700">
+                        <p class="mt-1 text-xl font-bold text-emerald-700">
                             0 hari
                         </p>
 
                         <p class="mt-1 text-xs leading-relaxed text-emerald-600">
-                            Seluruh kelebihan masih tertutup oleh cuti tahunan.
+                            Seluruh kelebihan sudah tertutup sesuai pembagian pengajuan.
                         </p>
-
                     </div>
 
                     @endif
@@ -790,9 +792,7 @@
                     </p>
 
                     <p class="mt-2 text-sm leading-relaxed text-slate-600">
-
                         Dari total
-
                         <strong class="text-slate-800">
                             {{ $leaveRequest->total_days }} hari
                         </strong>,
@@ -800,38 +800,60 @@
                         <strong class="text-blue-700">
                             {{ $leaveRequest->policy_covered_days ?? 0 }} hari
                         </strong>
-
-                        ditanggung sesuai ketentuan,
+                        tercatat sebagai hak sesuai ketentuan,
 
                         <strong class="text-red-700">
                             {{ $leaveRequest->annual_leave_deducted_days }} hari
                         </strong>
-
                         menggunakan cuti tahunan
 
-                        @if(
-                        $leaveRequest
-                        ->unpaid_days
-                        > 0
-                        )
-
+                        @if($leaveRequest->self_replacement_days > 0)
                         dan
+                        <strong class="text-amber-700">
+                            {{ $leaveRequest->self_replacement_days }} hari
+                        </strong>
+                        menjadi tanggung jawab mencari pengganti dan biaya mandiri
+                        @endif
 
+                        @if($leaveRequest->unpaid_days > 0)
+                        serta
                         <strong class="text-rose-700">
                             {{ $leaveRequest->unpaid_days }} hari
                         </strong>
-
-                        sisanya diajukan sebagai hari tidak dibayar /
-                        potong gaji apabila pengajuan disetujui.
-
+                        dicatat sebagai hari tidak dibayar / potong gaji.
                         @else
-
-                        dan tidak ada hari yang tersisa sebagai hari tidak dibayar.
-
+                        .
                         @endif
-
                     </p>
 
+                </div>
+
+                @endif
+
+
+                {{-- ====================================================
+                    KONFIRMASI PENGGANTI MANDIRI
+                ==================================================== --}}
+                @if($leaveRequest->self_replacement_days > 0)
+
+                <div
+                    class="mt-5 rounded-xl border {{ $leaveRequest->self_replacement_consent ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50' }} p-5">
+
+                    <p class="text-sm font-semibold {{ $leaveRequest->self_replacement_consent ? 'text-emerald-800' : 'text-red-800' }}">
+                        {{ $leaveRequest->self_replacement_consent ? '✓ Konfirmasi Pengganti Mandiri Tercatat' : 'Konfirmasi Pengganti Mandiri Belum Tercatat' }}
+                    </p>
+
+                    <p class="mt-1 text-sm leading-relaxed {{ $leaveRequest->self_replacement_consent ? 'text-emerald-700' : 'text-red-700' }}">
+                        Karyawan memilih {{ $leaveRequest->self_replacement_days }} hari untuk mencari pengganti sendiri dan membayar pengganti secara pribadi.
+                        Nama pengganti tidak diwajibkan dicatat di sistem.
+                    </p>
+
+                    @if($leaveRequest->self_replacement_consent_at)
+                    <p class="mt-2 text-xs text-emerald-600">
+                        Konfirmasi diberikan pada
+                        <strong>{{ $leaveRequest->self_replacement_consent_at->format('d/m/Y H:i') }}</strong>.
+                    </p>
+                    @endif
                 </div>
 
                 @endif
@@ -1266,15 +1288,27 @@
 
 
         <div class="p-6">
-            @if(! $leaveRequest->has_substitute)
+            @if($leaveRequest->self_replacement_days > 0)
 
-            <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
-                <p class="text-sm font-medium text-slate-600">
-                    Pengajuan ini tidak menggunakan pengganti.
+            <div class="rounded-xl border border-amber-200 bg-amber-50 p-5">
+                <p class="text-sm font-semibold text-amber-900">
+                    Pengganti & Biaya Mandiri
+                </p>
+
+                <p class="mt-2 text-sm leading-relaxed text-amber-800">
+                    {{ $leaveRequest->self_replacement_days }} hari menjadi tanggung jawab karyawan untuk mencari pengganti dan menyelesaikan biaya secara pribadi.
+                    Nama, nomor WhatsApp, dan rekening pengganti tidak perlu dicatat di aplikasi.
+                </p>
+
+                <p class="mt-3 text-sm font-medium {{ $leaveRequest->self_replacement_consent ? 'text-emerald-700' : 'text-red-700' }}">
+                    {{ $leaveRequest->self_replacement_consent ? '✓ Konfirmasi karyawan sudah tercatat.' : 'Konfirmasi karyawan belum tercatat.' }}
                 </p>
             </div>
 
-            @elseif($leaveRequest->substituteSchedules->isNotEmpty())
+            @endif
+
+
+            @if($leaveRequest->substituteSchedules->isNotEmpty())
 
             <div class="mb-5 grid gap-4 sm:grid-cols-2">
                 <div class="rounded-xl bg-blue-50 p-4">
@@ -1317,7 +1351,7 @@
                                 </th>
 
                                 <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                    Rekening
+                                    Biaya Pengganti
                                 </th>
 
                                 <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -1339,21 +1373,16 @@
                             ?? $leaveRequest->substitute_whatsapp
                             ?? '-';
 
-                            $scheduleAddress = $schedule->substitute_address
-                            ?? $leaveRequest->substitute_address
-                            ?? '-';
+                            $scheduleFeePayer = $schedule->substitute_fee_payer;
 
                             $scheduleBank = $schedule->substitute_bank_name
-                            ?? $leaveRequest->substitute_bank_name
-                            ?? '-';
+                            ?? $leaveRequest->substitute_bank_name;
 
                             $scheduleAccount = $schedule->substitute_bank_account_number
-                            ?? $leaveRequest->substitute_bank_account_number
-                            ?? '-';
+                            ?? $leaveRequest->substitute_bank_account_number;
 
                             $scheduleHolder = $schedule->substitute_bank_account_holder
-                            ?? $leaveRequest->substitute_bank_account_holder
-                            ?? '-';
+                            ?? $leaveRequest->substitute_bank_account_holder;
                             @endphp
 
                             <tr class="align-top">
@@ -1372,10 +1401,6 @@
                                     <p class="font-semibold text-slate-800">
                                         {{ $scheduleName }}
                                     </p>
-
-                                    <p class="mt-1 text-xs leading-relaxed text-slate-500">
-                                        {{ $scheduleAddress }}
-                                    </p>
                                 </td>
 
 
@@ -1386,18 +1411,48 @@
                                 </td>
 
 
-                                <td class="min-w-[210px] px-5 py-4">
-                                    <p class="text-sm font-semibold text-slate-800">
-                                        {{ $scheduleBank }}
+                                <td class="min-w-[230px] px-5 py-4">
+                                    @if($scheduleFeePayer === 'company')
+                                    <span class="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                                        Perusahaan
+                                    </span>
+
+                                    <p class="mt-2 text-sm font-semibold text-slate-800">
+                                        {{ $scheduleBank ?? '-' }}
                                     </p>
 
                                     <p class="mt-1 text-xs text-slate-500">
-                                        {{ $scheduleAccount }}
+                                        {{ $scheduleAccount ?? '-' }}
                                     </p>
 
                                     <p class="mt-1 text-xs text-slate-400">
-                                        a.n. {{ $scheduleHolder }}
+                                        a.n. {{ $scheduleHolder ?? '-' }}
                                     </p>
+                                    @elseif($scheduleFeePayer === 'employee')
+                                    <span class="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                        Saya / Pemohon
+                                    </span>
+
+                                    <p class="mt-2 text-xs leading-relaxed text-slate-500">
+                                        Biaya pengganti ditanggung dan diselesaikan oleh karyawan yang mengajukan izin.
+                                    </p>
+                                    @else
+                                    <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                                        Data Lama
+                                    </span>
+
+                                    <p class="mt-2 text-xs leading-relaxed text-slate-500">
+                                        Penanggung biaya belum tercatat pada pengajuan lama.
+                                    </p>
+
+                                    @if($scheduleBank || $scheduleAccount || $scheduleHolder)
+                                    <p class="mt-2 text-xs text-slate-500">
+                                        {{ $scheduleBank ?? '-' }}
+                                        • {{ $scheduleAccount ?? '-' }}
+                                        • a.n. {{ $scheduleHolder ?? '-' }}
+                                    </p>
+                                    @endif
+                                    @endif
                                 </td>
 
 
@@ -1442,7 +1497,7 @@
                 </div>
             </div>
 
-            @else
+            @elseif($leaveRequest->has_substitute)
 
             {{-- Data lama: masih memakai kolom pengganti global. --}}
             <div class="rounded-xl border border-amber-200 bg-amber-50 p-5">
@@ -1484,6 +1539,14 @@
                         </p>
                     </div>
                 </div>
+            </div>
+
+            @elseif($leaveRequest->self_replacement_days === 0)
+
+            <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
+                <p class="text-sm font-medium text-slate-600">
+                    Pengajuan ini tidak menggunakan pengganti yang dicatat di sistem.
+                </p>
             </div>
 
             @endif
@@ -1713,6 +1776,29 @@
 
 
         {{-- ====================================================
+                WARNING PENGGANTI MANDIRI
+            ==================================================== --}}
+        @if($leaveRequest->self_replacement_days > 0)
+
+        <div class="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <p class="text-sm font-semibold text-amber-800">
+                Pengganti Mandiri
+            </p>
+
+            <p class="mt-1 text-sm leading-relaxed text-amber-700">
+                Sebanyak <strong>{{ $leaveRequest->self_replacement_days }} hari</strong>
+                menjadi tanggung jawab karyawan untuk mencari pengganti dan membayar pengganti secara pribadi.
+            </p>
+
+            <p class="mt-2 text-sm font-medium {{ $leaveRequest->self_replacement_consent ? 'text-emerald-700' : 'text-red-700' }}">
+                {{ $leaveRequest->self_replacement_consent ? '✓ Konfirmasi karyawan sudah tercatat.' : 'Konfirmasi belum tercatat. Pengajuan tidak dapat disetujui.' }}
+            </p>
+        </div>
+
+        @endif
+
+
+        {{-- ====================================================
                 WARNING HARI TIDAK DIBAYAR
             ==================================================== --}}
         @if(
@@ -1892,9 +1978,15 @@
                         id="openApproveModal"
 
                         @disabled(
+                        (
                         $leaveRequest->unpaid_days > 0
-                        &&
-                        ! $leaveRequest->salary_deduction_consent
+                        && ! $leaveRequest->salary_deduction_consent
+                        )
+                        ||
+                        (
+                        $leaveRequest->self_replacement_days > 0
+                        && ! $leaveRequest->self_replacement_consent
+                        )
                         )
 
                         class="w-full rounded-lg
@@ -2114,6 +2206,27 @@
                                 <p class="text-sm font-semibold text-amber-800">Saldo cuti akan berkurang</p>
                                 <p class="mt-1 text-sm leading-relaxed text-amber-700">
                                     Persetujuan ini akan memotong <strong>{{ $leaveRequest->annual_leave_deducted_days }} hari</strong> dari saldo cuti tahunan.
+                                </p>
+                            </div>
+                        </div>
+                        @endif
+
+                        @if($leaveRequest->self_replacement_days > 0)
+                        <div class="mt-4 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                            <div class="mt-0.5 shrink-0 text-amber-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-amber-800">
+                                    {{ $leaveRequest->self_replacement_days }} hari pengganti mandiri
+                                </p>
+                                <p class="mt-1 text-sm leading-relaxed text-amber-700">
+                                    Karyawan bertanggung jawab mencari pengganti sendiri dan menyelesaikan biaya pengganti secara pribadi.
+                                </p>
+                                <p class="mt-2 text-xs font-semibold {{ $leaveRequest->self_replacement_consent ? 'text-emerald-700' : 'text-red-700' }}">
+                                    {{ $leaveRequest->self_replacement_consent ? '✓ Konfirmasi karyawan sudah tercatat' : 'Konfirmasi karyawan belum tercatat' }}
                                 </p>
                             </div>
                         </div>
