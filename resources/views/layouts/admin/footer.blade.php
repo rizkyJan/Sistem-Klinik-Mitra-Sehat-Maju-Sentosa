@@ -27,11 +27,11 @@
         ">
 
         <p>
-            &copy; {{ date('Y') }} Sistem Perizinan MSMS
+            &copy; {{ date('Y') }} SIMI-MS
         </p>
 
         <p>
-            Mitra Sehat Maju Sentosa
+            Sistem Informasi Manajemen Internal - Mitra Sehat
         </p>
 
     </div>

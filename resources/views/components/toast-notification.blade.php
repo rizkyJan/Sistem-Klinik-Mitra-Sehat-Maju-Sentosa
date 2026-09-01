@@ -1,53 +1,50 @@
 {{-- ================================================================
-    REUSABLE TOAST NOTIFICATION
-    Untuk session success / error.
+    SIMI-MS GLOBAL TOAST NOTIFICATION
+
+    Mendukung:
+    - Flash session: success, error, warning, info
+    - JavaScript: window.showSimiToast(message, type, title, duration)
+    - type: success | error | warning | info
 ================================================================ --}}
 
+@once
 @php
-$toastType = null;
-$toastMessage = null;
+$simiToastType = null;
+$simiToastMessage = null;
 
-if (session('success')) {
-$toastType = 'success';
-$toastMessage = session('success');
-} elseif (session('error')) {
-$toastType = 'error';
-$toastMessage = session('error');
+foreach (['success', 'error', 'warning', 'info'] as $type) {
+if (session()->has($type)) {
+$simiToastType = $type;
+$simiToastMessage = session($type);
+break;
+}
 }
 @endphp
 
-
-@if($toastMessage)
 <div
-    id="reimbursementToast"
-    class="fixed right-4 top-4 z-[110]
-               w-[calc(100%-2rem)] max-w-sm
-               translate-x-8 opacity-0
-               transition-all duration-300 sm:right-6 sm:top-6">
+    id="simiToast"
+    class="pointer-events-none invisible fixed right-4 top-4 z-[110]
+           w-[calc(100%-2rem)] max-w-sm translate-x-8 opacity-0
+           transition-all duration-300 sm:right-6 sm:top-6"
+    role="status"
+    aria-live="polite"
+    aria-atomic="true">
 
     <div
-        class="overflow-hidden rounded-xl border bg-white shadow-2xl
-            {{
-                $toastType === 'success'
-                    ? 'border-emerald-200'
-                    : 'border-red-200'
-            }}">
+        data-simi-toast-card
+        class="pointer-events-auto overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
 
         <div class="flex gap-3 p-4">
 
             <div
-                class="flex h-10 w-10 shrink-0 items-center justify-center
-                           rounded-full
-                    {{
-                        $toastType === 'success'
-                            ? 'bg-emerald-50 text-emerald-600'
-                            : 'bg-red-50 text-red-600'
-                    }}">
+                data-simi-toast-icon-wrapper
+                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-50 text-slate-600">
 
-                @if($toastType === 'success')
+                {{-- Success icon --}}
                 <svg
+                    data-simi-toast-icon="success"
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
+                    class="hidden h-5 w-5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor">
@@ -57,10 +54,12 @@ $toastMessage = session('error');
                         stroke-width="2"
                         d="M5 13l4 4L19 7" />
                 </svg>
-                @else
+
+                {{-- Error icon --}}
                 <svg
+                    data-simi-toast-icon="error"
                     xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5"
+                    class="hidden h-5 w-5"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor">
@@ -70,37 +69,56 @@ $toastMessage = session('error');
                         stroke-width="2"
                         d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                @endif
-            </div>
 
+                {{-- Warning icon --}}
+                <svg
+                    data-simi-toast-icon="warning"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="hidden h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 9v2m0 4h.01M10.29 3.86l-7.82 13.55A2 2 0 004.2 20h15.6a2 2 0 001.73-3l-7.82-13.55a2 2 0 00-3.42 0z" />
+                </svg>
+
+                {{-- Info icon --}}
+                <svg
+                    data-simi-toast-icon="info"
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="hidden h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
 
             <div class="min-w-0 flex-1">
                 <p
-                    class="text-sm font-semibold
-                        {{
-                            $toastType === 'success'
-                                ? 'text-emerald-900'
-                                : 'text-red-900'
-                        }}">
-                    {{
-                            $toastType === 'success'
-                                ? 'Berhasil'
-                                : 'Gagal'
-                        }}
+                    data-simi-toast-title
+                    class="text-sm font-semibold text-slate-900">
+                    Informasi
                 </p>
 
-                <p class="mt-1 text-sm leading-relaxed text-slate-600">
-                    {{ $toastMessage }}
+                <p
+                    data-simi-toast-message
+                    class="mt-1 break-words text-sm leading-relaxed text-slate-600">
                 </p>
             </div>
 
-
             <button
                 type="button"
-                data-toast-close
-                class="shrink-0 self-start rounded-md
-                           p-1 text-slate-400 transition
-                           hover:bg-slate-100 hover:text-slate-600"
+                data-simi-toast-close
+                class="shrink-0 self-start rounded-md p-1 text-slate-400 transition
+                       hover:bg-slate-100 hover:text-slate-600"
                 aria-label="Tutup notifikasi">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -117,111 +135,199 @@ $toastMessage = session('error');
             </button>
         </div>
 
-
         <div
-            class="h-1
-                {{
-                    $toastType === 'success'
-                        ? 'bg-emerald-500'
-                        : 'bg-red-500'
-                }}"
-            data-toast-progress>
+            data-simi-toast-progress
+            class="h-1 w-full bg-blue-500">
         </div>
     </div>
 </div>
 
-
-@once
 @push('scripts')
 <script>
-    document.addEventListener(
-        'DOMContentLoaded',
-        function() {
-            const toast =
-                document.getElementById(
-                    'reimbursementToast'
-                );
+    (function() {
+        const toast = document.getElementById('simiToast');
 
-            if (!toast) {
+        if (!toast) {
+            return;
+        }
+
+        const card = toast.querySelector('[data-simi-toast-card]');
+        const iconWrapper = toast.querySelector('[data-simi-toast-icon-wrapper]');
+        const icons = toast.querySelectorAll('[data-simi-toast-icon]');
+        const titleElement = toast.querySelector('[data-simi-toast-title]');
+        const messageElement = toast.querySelector('[data-simi-toast-message]');
+        const closeButton = toast.querySelector('[data-simi-toast-close]');
+        const progress = toast.querySelector('[data-simi-toast-progress]');
+
+        const typeConfig = {
+            success: {
+                title: 'Berhasil',
+                card: ['border-emerald-200'],
+                icon: ['bg-emerald-50', 'text-emerald-600'],
+                titleClass: ['text-emerald-900'],
+                progress: ['bg-emerald-500'],
+            },
+            error: {
+                title: 'Gagal',
+                card: ['border-red-200'],
+                icon: ['bg-red-50', 'text-red-600'],
+                titleClass: ['text-red-900'],
+                progress: ['bg-red-500'],
+            },
+            warning: {
+                title: 'Perhatian',
+                card: ['border-amber-200'],
+                icon: ['bg-amber-50', 'text-amber-600'],
+                titleClass: ['text-amber-900'],
+                progress: ['bg-amber-500'],
+            },
+            info: {
+                title: 'Informasi',
+                card: ['border-blue-200'],
+                icon: ['bg-blue-50', 'text-blue-600'],
+                titleClass: ['text-blue-900'],
+                progress: ['bg-blue-500'],
+            },
+        };
+
+        const removableCardClasses = [
+            'border-slate-200',
+            'border-emerald-200',
+            'border-red-200',
+            'border-amber-200',
+            'border-blue-200',
+        ];
+
+        const removableIconClasses = [
+            'bg-slate-50',
+            'text-slate-600',
+            'bg-emerald-50',
+            'text-emerald-600',
+            'bg-red-50',
+            'text-red-600',
+            'bg-amber-50',
+            'text-amber-600',
+            'bg-blue-50',
+            'text-blue-600',
+        ];
+
+        const removableTitleClasses = [
+            'text-slate-900',
+            'text-emerald-900',
+            'text-red-900',
+            'text-amber-900',
+            'text-blue-900',
+        ];
+
+        const removableProgressClasses = [
+            'bg-blue-500',
+            'bg-emerald-500',
+            'bg-red-500',
+            'bg-amber-500',
+        ];
+
+        let closeTimer = null;
+        let removeVisibilityTimer = null;
+
+        function normaliseType(type) {
+            return Object.prototype.hasOwnProperty.call(typeConfig, type) ?
+                type :
+                'info';
+        }
+
+        function applyType(type) {
+            const safeType = normaliseType(type);
+            const config = typeConfig[safeType];
+
+            card.classList.remove(...removableCardClasses);
+            card.classList.add(...config.card);
+
+            iconWrapper.classList.remove(...removableIconClasses);
+            iconWrapper.classList.add(...config.icon);
+
+            titleElement.classList.remove(...removableTitleClasses);
+            titleElement.classList.add(...config.titleClass);
+
+            progress.classList.remove(...removableProgressClasses);
+            progress.classList.add(...config.progress);
+
+            icons.forEach(function(icon) {
+                icon.classList.toggle(
+                    'hidden',
+                    icon.dataset.simiToastIcon !== safeType
+                );
+            });
+
+            return config;
+        }
+
+        function hideToast() {
+            if (closeTimer) {
+                clearTimeout(closeTimer);
+                closeTimer = null;
+            }
+
+            toast.classList.add('translate-x-8', 'opacity-0');
+            toast.classList.remove('translate-x-0', 'opacity-100');
+
+            removeVisibilityTimer = setTimeout(function() {
+                toast.classList.add('invisible');
+            }, 300);
+        }
+
+        window.showSimiToast = function(
+            message,
+            type = 'info',
+            title = null,
+            duration = 4500
+        ) {
+            if (!message) {
                 return;
             }
 
-            const closeButton =
-                toast.querySelector(
-                    '[data-toast-close]'
-                );
+            if (closeTimer) {
+                clearTimeout(closeTimer);
+            }
 
-            const progress =
-                toast.querySelector(
-                    '[data-toast-progress]'
-                );
+            if (removeVisibilityTimer) {
+                clearTimeout(removeVisibilityTimer);
+            }
 
-            let closeTimer = null;
+            const safeType = normaliseType(type);
+            const config = applyType(safeType);
 
+            titleElement.textContent = title || config.title;
+            messageElement.textContent = String(message);
 
-            function showToast() {
+            toast.classList.remove('invisible');
+
+            progress.style.transition = 'none';
+            progress.style.width = '100%';
+
+            requestAnimationFrame(function() {
+                toast.classList.remove('translate-x-8', 'opacity-0');
+                toast.classList.add('translate-x-0', 'opacity-100');
+
                 requestAnimationFrame(function() {
-                    toast.classList.remove(
-                        'translate-x-8',
-                        'opacity-0'
-                    );
-
-                    toast.classList.add(
-                        'translate-x-0',
-                        'opacity-100'
-                    );
+                    progress.style.transition = `width ${duration}ms linear`;
+                    progress.style.width = '0%';
                 });
+            });
 
-                if (progress) {
-                    progress.style.transition =
-                        'width 4.5s linear';
+            closeTimer = setTimeout(hideToast, duration);
+        };
 
-                    progress.style.width = '100%';
+        closeButton?.addEventListener('click', hideToast);
 
-                    requestAnimationFrame(
-                        function() {
-                            progress.style.width = '0%';
-                        }
-                    );
-                }
-
-                closeTimer = setTimeout(
-                    hideToast,
-                    4500
-                );
-            }
-
-
-            function hideToast() {
-                if (closeTimer) {
-                    clearTimeout(closeTimer);
-                }
-
-                toast.classList.add(
-                    'translate-x-8',
-                    'opacity-0'
-                );
-
-                toast.classList.remove(
-                    'translate-x-0',
-                    'opacity-100'
-                );
-
-                setTimeout(function() {
-                    toast.remove();
-                }, 300);
-            }
-
-
-            closeButton?.addEventListener(
-                'click',
-                hideToast
+        @if($simiToastMessage)
+        document.addEventListener('DOMContentLoaded', function() {
+            window.showSimiToast(
+                @json($simiToastMessage),
+                @json($simiToastType)
             );
-
-            showToast();
-        }
-    );
+        });
+        @endif
+    })();
 </script>
 @endpush
 @endonce
-@endif

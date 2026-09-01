@@ -15,7 +15,7 @@
 
 
     <title>
-        Login | Sistem Perizinan MSMS
+        Login | SIMI-MS
     </title>
 
 
@@ -63,7 +63,7 @@
                         shadow-lg
                         shadow-blue-600/20
                     ">
-                    M
+                    S
                 </div>
 
 
@@ -74,7 +74,7 @@
                         font-bold
                         text-slate-900
                     ">
-                    Mitra Sehat Maju Sentosa
+                    SIMI-MS
                 </h1>
 
 
@@ -84,7 +84,7 @@
                         text-sm
                         text-slate-500
                     ">
-                    Sistem Perizinan MSMS
+                    Sistem Informasi Manajemen Internal - Mitra Sehat
                 </p>
 
             </div>
@@ -549,7 +549,7 @@
                     text-xs
                     text-slate-400
                 ">
-                © {{ date('Y') }} Mitra Sehat Maju Sentosa
+                © {{ date('Y') }} SIMI-MS • Mitra Sehat
             </p>
 
         </div>

@@ -14,7 +14,11 @@
 
 
     <title>
-        @yield('title', 'Sistem Perizinan MSMS')
+        @hasSection('title')
+        @yield('title') | SIMI-MS
+        @else
+        SIMI-MS
+        @endif
     </title>
 
 
@@ -627,6 +631,9 @@
         );
     </script>
 
+
+    {{-- Notifikasi global SIMI-MS --}}
+    <x-toast-notification />
 
     {{-- Script tambahan dari halaman tertentu --}}
     @stack('scripts')

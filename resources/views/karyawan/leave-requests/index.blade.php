@@ -39,31 +39,6 @@
 
     </div>
 
-
-
-    @foreach(
-    ['success', 'error']
-    as $message
-    )
-
-    @if(session($message))
-
-    <div
-        class="rounded-lg border
-                       px-4 py-3 text-sm
-
-                {{ $message === 'success'
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                    : 'border-red-200 bg-red-50 text-red-700'
-                }}">
-        {{ session($message) }}
-    </div>
-
-    @endif
-
-    @endforeach
-
-
     {{-- ============================================================
         RINGKASAN STATUS
     ============================================================ --}}

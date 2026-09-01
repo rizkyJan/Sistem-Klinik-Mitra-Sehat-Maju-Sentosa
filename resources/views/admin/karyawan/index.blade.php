@@ -21,7 +21,7 @@
             </h1>
 
             <p class="mt-1 text-sm text-slate-500">
-                Kelola data dan verifikasi karyawan Mitra Sehat Maju Sentosa.
+                Kelola data dan verifikasi karyawan Mitra Sehat.
             </p>
 
         </div>
@@ -574,7 +574,7 @@
 
         <p class="mt-2 text-sm leading-6 text-slate-500">
             Akun <strong id="approveName" class="text-slate-700">karyawan</strong>
-            akan langsung aktif dan dapat menggunakan sistem perizinan.
+            akan langsung aktif dan dapat menggunakan SIMI-MS.
         </p>
 
         <div class="mt-6 grid grid-cols-2 gap-3">

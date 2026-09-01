@@ -10,7 +10,11 @@
         content="width=device-width, initial-scale=1.0">
 
     <title>
-        @yield('title', 'Sistem Perizinan MSMS')
+        @hasSection('title')
+        @yield('title') | SIMI-MS
+        @else
+        SIMI-MS
+        @endif
     </title>
 
 
@@ -352,6 +356,9 @@
 
     {{-- Modal konfirmasi global untuk seluruh halaman Admin --}}
     <x-confirm-action-modal />
+
+    {{-- Notifikasi global SIMI-MS --}}
+    <x-toast-notification />
 
     {{-- Script tambahan dari halaman tertentu --}}
     @stack('scripts')

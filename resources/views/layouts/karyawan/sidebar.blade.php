@@ -90,7 +90,7 @@
                     font-bold
                     text-white
                 ">
-                M
+                S
             </div>
 
 
@@ -104,11 +104,11 @@
                         font-semibold
                         leading-tight
                     ">
-                    Sistem Perizinan
+                    SIMI-MS
                 </h1>
 
                 <p class="text-xs text-slate-400">
-                    MSMS
+                    Mitra Sehat • Karyawan
                 </p>
 
             </div>

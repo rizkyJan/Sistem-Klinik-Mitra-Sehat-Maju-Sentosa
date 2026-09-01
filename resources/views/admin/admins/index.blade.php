@@ -23,7 +23,7 @@
             </h1>
 
             <p class="mt-1 text-sm text-slate-500">
-                Kelola akun administrator Sistem Perizinan MSMS.
+                Kelola akun administrator SIMI-MS.
             </p>
 
         </div>
@@ -41,24 +41,6 @@
         </a>
 
     </div>
-
-
-    {{-- ============================================================
-        ALERT SUCCESS
-    ============================================================ --}}
-    @if(session('success'))
-
-    <div
-        class="rounded-xl border border-emerald-200
-                   bg-emerald-50 px-4 py-3
-                   text-sm text-emerald-700">
-
-        {{ session('success') }}
-
-    </div>
-
-    @endif
-
 
     {{-- ============================================================
         ERROR

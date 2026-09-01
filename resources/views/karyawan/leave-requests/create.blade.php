@@ -2426,8 +2426,9 @@ fn ($shift) => [
                 const selectedCards = getSelectedCards();
 
                 if (selectedCards.length < 2) {
-                    alert(
-                        'Pilih minimal dua hari yang membutuhkan pengganti.'
+                    window.showSimiToast(
+                        'Pilih minimal dua hari yang membutuhkan pengganti.',
+                        'warning'
                     );
                     return;
                 }
@@ -2456,8 +2457,9 @@ fn ($shift) => [
                 };
 
                 if (!source.name) {
-                    alert(
-                        'Isi data pengganti pada hari terpilih pertama terlebih dahulu.'
+                    window.showSimiToast(
+                        'Isi data pengganti pada hari terpilih pertama terlebih dahulu.',
+                        'warning'
                     );
                     return;
                 }
@@ -2513,8 +2515,9 @@ fn ($shift) => [
                 const selectedCards = getSelectedCards();
 
                 if (selectedCards.length < 2) {
-                    alert(
-                        'Pilih minimal dua hari yang membutuhkan pengganti.'
+                    window.showSimiToast(
+                        'Pilih minimal dua hari yang membutuhkan pengganti.',
+                        'warning'
                     );
                     return;
                 }
@@ -2526,8 +2529,9 @@ fn ($shift) => [
                 )?.value;
 
                 if (!firstType) {
-                    alert(
-                        'Isi jadwal pada hari terpilih pertama terlebih dahulu.'
+                    window.showSimiToast(
+                        'Isi jadwal pada hari terpilih pertama terlebih dahulu.',
+                        'warning'
                     );
                     return;
                 }

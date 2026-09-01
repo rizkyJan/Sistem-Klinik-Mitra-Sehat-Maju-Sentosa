@@ -22,7 +22,7 @@
 
             <p class="mt-1 text-sm text-slate-500">
                 Tambahkan data karyawan baru
-                Mitra Sehat Maju Sentosa.
+                Mitra Sehat.
             </p>
 
         </div>

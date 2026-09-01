@@ -73,7 +73,7 @@
                     font-bold
                     text-white
                 ">
-                M
+                S
             </div>
 
             <div class="min-w-0">
@@ -84,11 +84,11 @@
                         font-semibold
                         leading-tight
                     ">
-                    Sistem Perizinan
+                    SIMI-MS
                 </h1>
 
                 <p class="text-xs text-slate-400">
-                    MSMS • Kabid
+                    Mitra Sehat • Kabid
                 </p>
             </div>
         </div>
