@@ -17,16 +17,12 @@ class GoogleAuthController extends Controller
     /**
      * Arahkan user ke halaman login Google.
      */
-    public function redirect()
+    public function redirect(): RedirectResponse
     {
-        return Socialite::driver('google')
-            /*
-             * Paksa Google menampilkan pemilih akun setiap kali
-             * tombol Login dengan Google ditekan.
-             *
-             * Ini tidak memaksa consent ulang. Pengguna hanya diminta
-             * memilih akun Google yang ingin digunakan.
-             */
+        /** @var \Laravel\Socialite\Two\GoogleProvider $google */
+        $google = Socialite::driver('google');
+
+        return $google
             ->with([
                 'prompt' => 'select_account',
             ])
