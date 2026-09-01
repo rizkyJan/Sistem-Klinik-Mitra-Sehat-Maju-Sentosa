@@ -1,4 +1,4 @@
-@extends('layouts.karyawan')
+@extends('layouts.kabid')
 
 @section('title', 'Riwayat Perizinan')
 
@@ -28,7 +28,7 @@
 
         <a
             href="{{ route(
-                'karyawan.leave-requests.create'
+                'kabid.leave-requests.create'
             ) }}"
             class="rounded-lg bg-blue-600
                    px-4 py-2.5 text-center
@@ -64,28 +64,56 @@
     @endforeach
 
 
+
+    {{-- ============================================================
+        ALUR CUTI KABID
+    ============================================================ --}}
+    <div
+        class="rounded-xl border border-blue-200
+               bg-blue-50 p-5">
+
+        <div class="flex items-start gap-3">
+
+            <div
+                class="flex h-9 w-9 shrink-0
+                       items-center justify-center
+                       rounded-lg bg-blue-100
+                       text-blue-700">
+
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor">
+
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+
+
+            <div>
+                <p class="font-semibold text-blue-800">
+                    Cuti Kabid langsung diproses Administrator
+                </p>
+
+                <p class="mt-1 text-sm leading-6 text-blue-700">
+                    Pengajuan cuti pribadi Kabid tidak memerlukan persetujuan Kabid
+                    lagi agar tidak terjadi persetujuan terhadap pengajuan sendiri.
+                </p>
+            </div>
+        </div>
+    </div>
+
+
     {{-- ============================================================
         RINGKASAN STATUS
     ============================================================ --}}
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-        <div
-            class="rounded-xl border border-amber-200
-                   bg-amber-50 p-5 shadow-sm">
-
-            <p class="text-sm font-medium text-amber-700">
-                Menunggu Kabid
-            </p>
-
-            <p class="mt-2 text-3xl font-bold text-amber-600">
-                {{ $waitingKabidCount }}
-            </p>
-
-            <p class="mt-1 text-xs text-amber-600">
-                Menunggu pemeriksaan tahap pertama.
-            </p>
-        </div>
-
+    <div class="grid gap-4 sm:grid-cols-3">
 
         <div
             class="rounded-xl border border-blue-200
@@ -100,7 +128,7 @@
             </p>
 
             <p class="mt-1 text-xs text-blue-600">
-                Tahap Kabid sudah selesai.
+                Sedang menunggu keputusan final.
             </p>
         </div>
 
@@ -118,7 +146,7 @@
             </p>
 
             <p class="mt-1 text-xs text-emerald-600">
-                Sudah mendapat keputusan final.
+                Sudah disetujui Administrator.
             </p>
         </div>
 
@@ -128,7 +156,7 @@
                    bg-red-50 p-5 shadow-sm">
 
             <p class="text-sm font-medium text-red-700">
-                Ditolak
+                Ditolak Admin
             </p>
 
             <p class="mt-2 text-3xl font-bold text-red-600">
@@ -136,7 +164,7 @@
             </p>
 
             <p class="mt-1 text-xs text-red-600">
-                Ditolak Kabid atau Admin.
+                Pengajuan ditolak Administrator.
             </p>
         </div>
     </div>
@@ -511,63 +539,12 @@
 
 
                         {{-- ===============================
-                                STATUS WORKFLOW
+                                STATUS FINAL ADMIN
                             ================================ --}}
                         <td class="min-w-[270px] px-6 py-4">
 
-                            @php
-                            $waitingKabid =
-                            $leave->status === 'pending'
-                            &&
-                            $leave->kabid_status
-                            === \App\Models\LeaveRequest::KABID_STATUS_PENDING;
-
-                            $waitingAdmin =
-                            $leave->status === 'pending'
-                            &&
-                            in_array(
-                            $leave->kabid_status,
-                            [
-                            \App\Models\LeaveRequest::KABID_STATUS_APPROVED,
-                            \App\Models\LeaveRequest::KABID_STATUS_NOT_REQUIRED,
-                            ],
-                            true
-                            );
-
-                            $rejectedByKabid =
-                            $leave->status === 'rejected'
-                            &&
-                            $leave->kabid_status
-                            === \App\Models\LeaveRequest::KABID_STATUS_REJECTED;
-                            @endphp
-
-
-                            {{-- MENUNGGU KABID --}}
-                            @if($waitingKabid)
-
-                            <span
-                                class="inline-flex items-center gap-1.5
-                                           rounded-full bg-amber-50
-                                           px-3 py-1 text-xs
-                                           font-semibold text-amber-700">
-
-                                <span
-                                    class="h-1.5 w-1.5 rounded-full
-                                               bg-amber-500">
-                                </span>
-
-                                Menunggu Persetujuan Kabid
-                            </span>
-
-
-                            <p class="mt-2 text-xs leading-5 text-slate-500">
-                                Pengajuan sedang menunggu pemeriksaan
-                                Kabid bidang Anda.
-                            </p>
-
-
                             {{-- MENUNGGU ADMIN --}}
-                            @elseif($waitingAdmin)
+                            @if($leave->status === 'pending')
 
                             <span
                                 class="inline-flex items-center gap-1.5
@@ -584,43 +561,12 @@
                             </span>
 
 
-                            @if(
-                            $leave->kabid_status
-                            === \App\Models\LeaveRequest::KABID_STATUS_APPROVED
-                            )
-
-                            <div
-                                class="mt-2 rounded-lg
-                                               border border-emerald-100
-                                               bg-emerald-50/70
-                                               px-3 py-2">
-
-                                <p
-                                    class="text-xs font-medium
-                                                   text-emerald-700">
-                                    ✓ Sudah disetujui Kabid
-                                </p>
-
-                                <p class="mt-1 text-[11px] text-slate-500">
-                                    {{ $leave->kabidReviewer?->name ?? 'Kabid' }}
-
-                                    @if($leave->kabid_reviewed_at)
-                                    •
-                                    {{ $leave->kabid_reviewed_at->format('d/m/Y H:i') }}
-                                    @endif
-                                </p>
-                            </div>
-
-                            @else
-
                             <p class="mt-2 text-xs leading-5 text-slate-500">
-                                Pengajuan langsung menunggu keputusan Admin.
+                                Pengajuan sudah masuk ke tahap keputusan final Administrator.
                             </p>
 
-                            @endif
 
-
-                            {{-- DISETUJUI FINAL --}}
+                            {{-- DISETUJUI ADMIN --}}
                             @elseif($leave->status === 'approved')
 
                             <span
@@ -633,7 +579,7 @@
 
 
                             <p class="mt-2 text-xs leading-5 text-slate-500">
-                                Keputusan final oleh
+                                Diproses oleh
                                 <span class="font-medium text-slate-700">
                                     {{ $leave->approver?->name ?? 'Administrator' }}
                                 </span>
@@ -643,59 +589,6 @@
                                 {{ $leave->approved_at->format('d/m/Y H:i') }}
                                 @endif
                             </p>
-
-
-                            {{-- DITOLAK KABID --}}
-                            @elseif($rejectedByKabid)
-
-                            <span
-                                class="inline-flex items-center gap-1.5
-                                           rounded-full bg-red-50
-                                           px-3 py-1 text-xs
-                                           font-semibold text-red-700">
-                                ✕ Ditolak Kabid
-                            </span>
-
-
-                            <p class="mt-2 text-xs text-slate-500">
-                                {{ $leave->kabidReviewer?->name ?? 'Kabid' }}
-
-                                @if($leave->kabid_reviewed_at)
-                                •
-                                {{ $leave->kabid_reviewed_at->format('d/m/Y H:i') }}
-                                @endif
-                            </p>
-
-
-                            @if(
-                            $leave->kabid_rejection_reason
-                            || $leave->rejection_reason
-                            )
-
-                            <div
-                                class="mt-2 max-w-sm rounded-lg
-                                               border border-red-100
-                                               bg-red-50/70 px-3 py-2">
-
-                                <p
-                                    class="text-[11px] font-semibold
-                                                   uppercase tracking-wide
-                                                   text-red-500">
-                                    Alasan
-                                </p>
-
-                                <p
-                                    class="mt-1 whitespace-pre-line
-                                                   text-xs leading-5
-                                                   text-red-700">
-                                    {{
-                                                $leave->kabid_rejection_reason
-                                                ?? $leave->rejection_reason
-                                            }}
-                                </p>
-                            </div>
-
-                            @endif
 
 
                             {{-- DITOLAK ADMIN --}}

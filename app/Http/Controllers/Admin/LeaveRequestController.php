@@ -23,58 +23,101 @@ class LeaveRequestController extends Controller
     {
         $this->ensureApprover();
 
+        $workflow = $request->input(
+            'workflow'
+        );
 
-        $status =
-            $request->input('status');
-
-
-        $search =
-            $request->input('search');
-
+        $search = trim(
+            (string) $request->input(
+                'search',
+                ''
+            )
+        );
 
         /*
         |--------------------------------------------------------------------------
-        | Pengajuan
+        | Daftar Pengajuan
         |--------------------------------------------------------------------------
         |
-        | Jadwal pengganti sekarang berasal dari:
+        | Admin tetap boleh melihat semua histori.
+        | Untuk status pending, urutkan:
         |
-        | leave_request_substitute_schedules
-        |
-        | sehingga eager load:
-        |
-        | substituteSchedules.workShift
+        | 1. Siap diproses Admin
+        | 2. Masih menunggu Kabid
         |
         */
-
         $leaveRequests =
             LeaveRequest::query()
-
             ->with([
                 'user.department',
                 'permissionType',
                 'substituteSchedules.workShift',
+                'kabidReviewer',
                 'approver',
             ])
 
             /*
                 |--------------------------------------------------------------------------
-                | Filter Status
+                | Filter Workflow
                 |--------------------------------------------------------------------------
                 */
+            ->when(
+                $workflow === 'ready_admin',
+                function ($query) {
+                    $query
+                        ->where(
+                            'status',
+                            'pending'
+                        )
+                        ->whereIn(
+                            'kabid_status',
+                            [
+                                LeaveRequest::KABID_STATUS_APPROVED,
+                                LeaveRequest::KABID_STATUS_NOT_REQUIRED,
+                            ]
+                        );
+                }
+            )
 
             ->when(
-                $status,
-                function (
-                    $query,
-                    $status
-                ) {
-
-                    $query->where(
-                        'status',
-                        $status
-                    );
+                $workflow === 'waiting_kabid',
+                function ($query) {
+                    $query
+                        ->where(
+                            'status',
+                            'pending'
+                        )
+                        ->where(
+                            'kabid_status',
+                            LeaveRequest::KABID_STATUS_PENDING
+                        )
+                        ->whereHas(
+                            'user',
+                            fn($userQuery) =>
+                            $userQuery->where(
+                                'role',
+                                'karyawan'
+                            )
+                        );
                 }
+            )
+
+            ->when(
+                $workflow === 'approved',
+                fn($query) =>
+                $query->where(
+                    'status',
+                    'approved'
+                )
+            )
+
+            ->when(
+                $workflow === 'rejected',
+                fn($query) =>
+                $query->where(
+                    'status',
+                    'rejected'
+                )
             )
 
             /*
@@ -82,90 +125,116 @@ class LeaveRequestController extends Controller
                 | Search
                 |--------------------------------------------------------------------------
                 */
-
             ->when(
-                $search,
-                function (
-                    $query,
-                    $search
-                ) {
-
+                $search !== '',
+                function ($query) use ($search) {
                     $query->where(
                         function ($query) use ($search) {
-
-                            /*
-                                 * Cari berdasarkan karyawan.
-                                 */
-                            $query->whereHas(
-                                'user',
-                                function ($query) use ($search) {
-
-                                    $query->where(
-                                        function ($query) use ($search) {
-
-                                            $query
-                                                ->where(
-                                                    'name',
-                                                    'like',
-                                                    '%' . $search . '%'
-                                                )
-
-                                                ->orWhere(
-                                                    'nik',
-                                                    'like',
-                                                    '%' . $search . '%'
-                                                )
-
-                                                ->orWhere(
-                                                    'email',
-                                                    'like',
-                                                    '%' . $search . '%'
-                                                );
-                                        }
-                                    );
-                                }
-                            )
-
-                                /*
-                                 * Atau berdasarkan jenis perizinan.
-                                 */
-                                ->orWhereHas(
-                                    'permissionType',
-                                    function ($query) use ($search) {
-
-                                        $query->where(
-                                            'name',
-                                            'like',
-                                            '%' . $search . '%'
+                            $query
+                                ->whereHas(
+                                    'user',
+                                    function ($userQuery) use ($search) {
+                                        $userQuery->where(
+                                            function ($userQuery) use ($search) {
+                                                $userQuery
+                                                    ->where(
+                                                        'name',
+                                                        'like',
+                                                        '%' . $search . '%'
+                                                    )
+                                                    ->orWhere(
+                                                        'nik',
+                                                        'like',
+                                                        '%' . $search . '%'
+                                                    )
+                                                    ->orWhere(
+                                                        'email',
+                                                        'like',
+                                                        '%' . $search . '%'
+                                                    );
+                                            }
                                         );
                                     }
+                                )
+                                ->orWhereHas(
+                                    'permissionType',
+                                    fn($typeQuery) =>
+                                    $typeQuery->where(
+                                        'name',
+                                        'like',
+                                        '%' . $search . '%'
+                                    )
+                                )
+                                ->orWhere(
+                                    'reason',
+                                    'like',
+                                    '%' . $search . '%'
                                 );
                         }
                     );
                 }
             )
 
+            /*
+                 * Prioritas:
+                 * 0 = siap Admin
+                 * 1 = menunggu Kabid
+                 * 2 = histori selesai
+                 */
+            ->orderByRaw(
+                "CASE
+                        WHEN status = 'pending'
+                             AND kabid_status IN ('approved', 'not_required')
+                            THEN 0
+                        WHEN status = 'pending'
+                             AND kabid_status = 'pending'
+                            THEN 1
+                        ELSE 2
+                    END"
+            )
             ->latest()
-
             ->paginate(10)
-
             ->withQueryString();
-
 
         /*
         |--------------------------------------------------------------------------
-        | Statistik
+        | Statistik Workflow
         |--------------------------------------------------------------------------
         */
-
-        $pendingCount =
+        $readyAdminCount =
             LeaveRequest::query()
             ->where(
                 'status',
                 'pending'
             )
+            ->whereIn(
+                'kabid_status',
+                [
+                    LeaveRequest::KABID_STATUS_APPROVED,
+                    LeaveRequest::KABID_STATUS_NOT_REQUIRED,
+                ]
+            )
             ->count();
 
+        $waitingKabidCount =
+            LeaveRequest::query()
+            ->where(
+                'status',
+                'pending'
+            )
+            ->where(
+                'kabid_status',
+                LeaveRequest::KABID_STATUS_PENDING
+            )
+            ->whereHas(
+                'user',
+                fn($query) =>
+                $query->where(
+                    'role',
+                    'karyawan'
+                )
+            )
+            ->count();
 
         $approvedCount =
             LeaveRequest::query()
@@ -175,7 +244,6 @@ class LeaveRequestController extends Controller
             )
             ->count();
 
-
         $rejectedCount =
             LeaveRequest::query()
             ->where(
@@ -184,15 +252,15 @@ class LeaveRequestController extends Controller
             )
             ->count();
 
-
         return view(
             'admin.leave-requests.index',
             compact(
                 'leaveRequests',
-                'pendingCount',
+                'readyAdminCount',
+                'waitingKabidCount',
                 'approvedCount',
                 'rejectedCount',
-                'status',
+                'workflow',
                 'search'
             )
         );
@@ -231,6 +299,14 @@ class LeaveRequestController extends Controller
              */
             'substituteSchedules.workShift',
 
+            /*
+             * Tahap 1 Kabid.
+             */
+            'kabidReviewer.department',
+
+            /*
+             * Tahap 2 / keputusan final Admin.
+             */
             'approver',
         ]);
 
@@ -315,6 +391,16 @@ class LeaveRequestController extends Controller
                             'Pengajuan ini sudah diproses sebelumnya.'
                         );
                     }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Wajib Lolos Tahap Kabid
+                    |--------------------------------------------------------------------------
+                    */
+                    $this->ensureKabidStageReady(
+                        $request
+                    );
 
 
                     /*
@@ -604,6 +690,16 @@ class LeaveRequestController extends Controller
 
                     /*
                     |--------------------------------------------------------------------------
+                    | Wajib Lolos Tahap Kabid
+                    |--------------------------------------------------------------------------
+                    */
+                    $this->ensureKabidStageReady(
+                        $currentRequest
+                    );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
                     | Reject
                     |--------------------------------------------------------------------------
                     |
@@ -654,7 +750,67 @@ class LeaveRequestController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | ACCESS
+    | VALIDASI TAHAP KABID
+    |--------------------------------------------------------------------------
+    */
+
+    private function ensureKabidStageReady(
+        LeaveRequest $leaveRequest
+    ): void {
+        $leaveRequest->loadMissing(
+            'user'
+        );
+
+        /*
+         * Cuti Kabid sendiri dan data legacy tidak membutuhkan
+         * approval tahap Kabid.
+         */
+        if (
+            $leaveRequest->kabid_status
+            === LeaveRequest::KABID_STATUS_NOT_REQUIRED
+        ) {
+            return;
+        }
+
+
+        /*
+         * Workflow dua tahap diwajibkan untuk pengaju Karyawan.
+         */
+        if (
+            $leaveRequest->user?->role
+            !== 'karyawan'
+        ) {
+            return;
+        }
+
+
+        if (
+            $leaveRequest->kabid_status
+            === LeaveRequest::KABID_STATUS_APPROVED
+        ) {
+            return;
+        }
+
+
+        if (
+            $leaveRequest->kabid_status
+            === LeaveRequest::KABID_STATUS_REJECTED
+        ) {
+            throw new \RuntimeException(
+                'Pengajuan ini sudah ditolak Kabid dan tidak dapat diproses Admin.'
+            );
+        }
+
+
+        throw new \RuntimeException(
+            'Pengajuan masih menunggu persetujuan Kabid. Admin belum dapat memproses pengajuan ini.'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESS ADMIN
     |--------------------------------------------------------------------------
     */
 
@@ -664,17 +820,14 @@ class LeaveRequestController extends Controller
             Auth::user();
 
 
+        /*
+         * Controller ini khusus Admin.
+         * Approval Kabid akan memakai controller terpisah pada STEP 15.
+         */
         abort_unless(
             $user
                 &&
-                in_array(
-                    $user->role,
-                    [
-                        'admin',
-                        'kabid',
-                    ],
-                    true
-                ),
+                $user->role === 'admin',
             403
         );
     }

@@ -17,6 +17,7 @@ class ShareAdminSidebarCounts
      *
      * Badge yang disediakan:
      * - $pendingEmployeeVerificationCount
+     * - $pendingKabidVerificationCount
      * - $pendingLeaveRequestCount
      * - $pendingReimbursementCount
      */
@@ -53,11 +54,46 @@ class ShareAdminSidebarCounts
 
             /*
             |--------------------------------------------------------------------------
+            | Kabid yang masih menunggu verifikasi
+            |--------------------------------------------------------------------------
+            */
+            $pendingKabidVerificationCount = User::query()
+                ->where('role', 'kabid')
+                ->where('approval_status', 'pending')
+                ->count();
+
+            /*
+            |--------------------------------------------------------------------------
             | Pengajuan perizinan yang masih menunggu keputusan
             |--------------------------------------------------------------------------
             */
+            /*
+            |--------------------------------------------------------------------------
+            | Pengajuan cuti yang SUDAH SIAP diproses Admin
+            |--------------------------------------------------------------------------
+            |
+            | Badge Admin tidak lagi menghitung seluruh status pending.
+            |
+            | Yang dihitung hanya:
+            | - Karyawan yang sudah ACC Kabid
+            | - Cuti Kabid sendiri / data legacy (not_required)
+            |
+            | Pengajuan yang masih menunggu Kabid tidak menjadi pekerjaan
+            | Admin sehingga tidak perlu menambah badge Admin.
+            |
+            */
             $pendingLeaveRequestCount = LeaveRequest::query()
-                ->where('status', 'pending')
+                ->where(
+                    'status',
+                    'pending'
+                )
+                ->whereIn(
+                    'kabid_status',
+                    [
+                        LeaveRequest::KABID_STATUS_APPROVED,
+                        LeaveRequest::KABID_STATUS_NOT_REQUIRED,
+                    ]
+                )
                 ->count();
 
             /*
@@ -79,6 +115,9 @@ class ShareAdminSidebarCounts
             view()->share([
                 'pendingEmployeeVerificationCount' =>
                 $pendingEmployeeVerificationCount,
+
+                'pendingKabidVerificationCount' =>
+                $pendingKabidVerificationCount,
 
                 'pendingLeaveRequestCount' =>
                 $pendingLeaveRequestCount,

@@ -1,581 +1,332 @@
 @extends('layouts.admin')
 
-@section('title', 'Dashboard Admin')
-
+@section('title', 'Dashboard')
 @section('page-title', 'Dashboard')
 
 @section('content')
 
-{{-- ============================================================
-    HEADING
-============================================================ --}}
-<div class="mb-8">
-
-    <h1 class="text-2xl font-bold text-slate-800">
-        Selamat datang, {{ $user->name }}
-    </h1>
-
-    <p class="mt-1 text-sm text-slate-500">
-        Kelola sistem perizinan karyawan Mitra Sehat Maju Sentosa.
-    </p>
-
-</div>
-
-
-
-{{-- ============================================================
-    STATISTIC CARDS
-============================================================ --}}
-<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
-
-    {{-- Total Karyawan --}}
-    <div
-        class="bg-white border border-slate-200
-               rounded-xl p-5 shadow-sm">
-
-        <div class="flex items-center justify-between">
-
-            <div>
-
-                <p class="text-sm text-slate-500">
-                    Total Karyawan
-                </p>
-
-                <h2 class="mt-2 text-3xl font-bold text-slate-800">
-                    {{ $totalKaryawan }}
-                </h2>
-
-            </div>
-
-
-            <div
-                class="w-11 h-11 rounded-xl
-                       bg-blue-50 text-blue-600
-                       flex items-center justify-center">
-
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
-                        d="M17 20h5v-2a4 4 0 00-4-4h-1
-                           M9 20H2v-2a4 4 0 014-4h1
-                           m6-4a4 4 0 100-8
-                           4 4 0 000 8
-                           m-4 4a4 4 0 100 8
-                           4 4 0 000-8z" />
-                </svg>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    {{-- Menunggu Persetujuan --}}
-    <div
-        class="bg-white border border-slate-200
-               rounded-xl p-5 shadow-sm">
-
-        <div class="flex items-center justify-between">
-
-            <div>
-
-                <p class="text-sm text-slate-500">
-                    Menunggu Persetujuan
-                </p>
-
-                <h2 class="mt-2 text-3xl font-bold text-slate-800">
-                    {{ $pendingCount }}
-                </h2>
-
-            </div>
-
-
-            <div
-                class="w-11 h-11 rounded-xl
-                       bg-amber-50 text-amber-600
-                       flex items-center justify-center">
-
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
-                        d="M12 8v4l3 3
-                           m6-3a9 9 0 11-18 0
-                           9 9 0 0118 0z" />
-                </svg>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    {{-- Disetujui --}}
-    <div
-        class="bg-white border border-slate-200
-               rounded-xl p-5 shadow-sm">
-
-        <div class="flex items-center justify-between">
-
-            <div>
-
-                <p class="text-sm text-slate-500">
-                    Cuti Disetujui
-                </p>
-
-                <h2 class="mt-2 text-3xl font-bold text-slate-800">
-                    {{ $approvedCount }}
-                </h2>
-
-            </div>
-
-
-            <div
-                class="w-11 h-11 rounded-xl
-                       bg-emerald-50 text-emerald-600
-                       flex items-center justify-center">
-
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
-                        d="M5 13l4 4L19 7" />
-                </svg>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-
-    {{-- Ditolak --}}
-    <div
-        class="bg-white border border-slate-200
-               rounded-xl p-5 shadow-sm">
-
-        <div class="flex items-center justify-between">
-
-            <div>
-
-                <p class="text-sm text-slate-500">
-                    Cuti Ditolak
-                </p>
-
-                <h2 class="mt-2 text-3xl font-bold text-slate-800">
-                    {{ $rejectedCount }}
-                </h2>
-
-            </div>
-
-
-            <div
-                class="w-11 h-11 rounded-xl
-                       bg-red-50 text-red-600
-                       flex items-center justify-center">
-
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="1.5"
-                        d="M6 18L18 6M6 6l12 12" />
-                </svg>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-
-{{-- ============================================================
-    INFORMASI AKUN
-============================================================ --}}
-<div
-    class="bg-white border border-slate-200
-           rounded-xl shadow-sm mb-8">
-
-    <div class="px-6 py-5 border-b border-slate-200">
-
-        <h2 class="font-semibold text-slate-800">
-            Sistem Perizinan Karyawan
-        </h2>
-
-        <p class="text-sm text-slate-500 mt-1">
-            Informasi akun yang sedang digunakan.
+<div class="space-y-6">
+
+    {{-- HEADER --}}
+    <div>
+        <h1 class="text-2xl font-bold text-slate-800">
+            Dashboard Administrator
+        </h1>
+
+        <p class="mt-1 text-sm text-slate-500">
+            Ringkasan pekerjaan yang benar-benar membutuhkan tindakan Administrator.
         </p>
-
     </div>
 
 
-    <div class="p-6">
+    {{-- PEKERJAAN UTAMA --}}
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-        <div class="grid sm:grid-cols-3 gap-6">
+        <a
+            href="{{ route(
+                'admin.leave-requests.index',
+                ['workflow' => 'ready_admin']
+            ) }}"
+            class="rounded-xl border border-blue-200 bg-blue-50
+                   p-5 shadow-sm transition hover:border-blue-300">
 
-            {{-- Nama --}}
-            <div>
-
-                <p
-                    class="text-xs font-medium uppercase
-                           tracking-wide text-slate-400">
-                    Nama
-                </p>
-
-                <p class="mt-1 font-medium text-slate-700">
-                    {{ $user->name }}
-                </p>
-
-            </div>
-
-
-            {{-- Email --}}
-            <div>
-
-                <p
-                    class="text-xs font-medium uppercase
-                           tracking-wide text-slate-400">
-                    Email
-                </p>
-
-                <p class="mt-1 font-medium text-slate-700">
-                    {{ $user->email }}
-                </p>
-
-            </div>
-
-
-            {{-- Role --}}
-            <div>
-
-                <p
-                    class="text-xs font-medium uppercase
-                           tracking-wide text-slate-400">
-                    Hak Akses
-                </p>
-
-                <div class="mt-1">
-
-                    <span
-                        class="inline-flex px-2.5 py-1
-                               rounded-full bg-blue-50
-                               text-blue-700
-                               text-xs font-medium capitalize">
-                        {{ $user->role }}
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-
-{{-- ============================================================
-    PENGAJUAN CUTI TERBARU
-============================================================ --}}
-<div
-    class="overflow-hidden rounded-xl
-           border border-slate-200
-           bg-white shadow-sm">
-
-    {{-- Header --}}
-    <div
-        class="flex flex-col gap-3
-               sm:flex-row sm:items-center
-               sm:justify-between
-               border-b border-slate-200
-               px-6 py-5">
-
-        <div>
-
-            <h2 class="font-semibold text-slate-800">
-                Pengajuan Cuti Terbaru
-            </h2>
-
-            <p class="mt-1 text-sm text-slate-500">
-                Lima pengajuan cuti terbaru dari karyawan.
+            <p class="text-sm font-medium text-blue-700">
+                Cuti Siap Diproses
             </p>
 
-        </div>
+            <p class="mt-2 text-3xl font-bold text-blue-700">
+                {{ $readyAdminLeaveCount }}
+            </p>
+
+            <p class="mt-1 text-xs text-blue-600">
+                Sudah lolos Kabid / tidak memerlukan Kabid.
+            </p>
+        </a>
 
 
         <a
-            href="{{ route('admin.leave-requests.index') }}"
-            class="text-sm font-medium
-                   text-blue-600 hover:text-blue-700">
-            Lihat Semua
+            href="{{ route(
+                'admin.leave-requests.index',
+                ['workflow' => 'waiting_kabid']
+            ) }}"
+            class="rounded-xl border border-amber-200 bg-amber-50
+                   p-5 shadow-sm transition hover:border-amber-300">
+
+            <p class="text-sm font-medium text-amber-700">
+                Masih di Kabid
+            </p>
+
+            <p class="mt-2 text-3xl font-bold text-amber-600">
+                {{ $waitingKabidLeaveCount }}
+            </p>
+
+            <p class="mt-1 text-xs text-amber-600">
+                Hanya informasi, belum menjadi pekerjaan Admin.
+            </p>
         </a>
 
+
+        <a
+            href="{{ route(
+                'admin.reimbursements.index',
+                ['status' => 'pending']
+            ) }}"
+            class="rounded-xl border border-violet-200 bg-violet-50
+                   p-5 shadow-sm transition hover:border-violet-300">
+
+            <p class="text-sm font-medium text-violet-700">
+                Reimburse Menunggu
+            </p>
+
+            <p class="mt-2 text-3xl font-bold text-violet-700">
+                {{ $pendingReimbursementCount }}
+            </p>
+
+            <p class="mt-1 text-xs text-violet-600">
+                Pengajuan keuangan yang belum diperiksa.
+            </p>
+        </a>
+
+
+        <div
+            class="rounded-xl border border-slate-200 bg-white
+                   p-5 shadow-sm">
+
+            <p class="text-sm font-medium text-slate-600">
+                Verifikasi Pegawai
+            </p>
+
+            <p class="mt-2 text-3xl font-bold text-slate-800">
+                {{
+                    $pendingKaryawanVerificationCount
+                    + $pendingKabidVerificationCount
+                }}
+            </p>
+
+            <p class="mt-1 text-xs text-slate-500">
+                Karyawan {{ $pendingKaryawanVerificationCount }}
+                • Kabid {{ $pendingKabidVerificationCount }}
+            </p>
+        </div>
     </div>
 
 
+    {{-- PEGAWAI --}}
+    <div class="grid gap-4 sm:grid-cols-2">
 
-    {{-- Table --}}
-    <div class="overflow-x-auto">
+        <a
+            href="{{ route('admin.karyawan.index') }}"
+            class="rounded-xl border border-slate-200
+                   bg-white p-5 shadow-sm transition hover:bg-slate-50">
 
-        <table class="min-w-full divide-y divide-slate-200">
+            <p class="text-sm text-slate-500">
+                Karyawan Aktif
+            </p>
 
-            <thead class="bg-slate-50">
-
-                <tr>
-
-                    <th
-                        class="px-6 py-3 text-left
-                               text-xs font-semibold
-                               uppercase tracking-wider
-                               text-slate-500">
-                        Karyawan
-                    </th>
-
-                    <th
-                        class="px-6 py-3 text-left
-                               text-xs font-semibold
-                               uppercase tracking-wider
-                               text-slate-500">
-                        Bidang
-                    </th>
-
-                    <th
-                        class="px-6 py-3 text-left
-                               text-xs font-semibold
-                               uppercase tracking-wider
-                               text-slate-500">
-                        Tanggal
-                    </th>
-
-                    <th
-                        class="px-6 py-3 text-left
-                               text-xs font-semibold
-                               uppercase tracking-wider
-                               text-slate-500">
-                        Hari
-                    </th>
-
-                    <th
-                        class="px-6 py-3 text-left
-                               text-xs font-semibold
-                               uppercase tracking-wider
-                               text-slate-500">
-                        Status
-                    </th>
-
-                    <th
-                        class="px-6 py-3 text-right
-                               text-xs font-semibold
-                               uppercase tracking-wider
-                               text-slate-500">
-                        Aksi
-                    </th>
-
-                </tr>
-
-            </thead>
+            <p class="mt-2 text-3xl font-bold text-slate-800">
+                {{ $activeKaryawanCount }}
+            </p>
+        </a>
 
 
-            <tbody class="divide-y divide-slate-200">
+        <a
+            href="{{ route('admin.kabid.index') }}"
+            class="rounded-xl border border-slate-200
+                   bg-white p-5 shadow-sm transition hover:bg-slate-50">
 
-                @forelse($recentLeaveRequests as $leave)
+            <p class="text-sm text-slate-500">
+                Kabid Aktif
+            </p>
 
-                <tr class="transition hover:bg-slate-50">
-
-                    {{-- Karyawan --}}
-                    <td class="px-6 py-4">
-
-                        <div class="flex items-center gap-3">
-
-                            <div
-                                class="flex h-9 w-9
-                                           items-center justify-center
-                                           rounded-full bg-blue-100
-                                           text-sm font-semibold
-                                           text-blue-700">
-                                {{ strtoupper(substr($leave->user->name, 0, 1)) }}
-                            </div>
+            <p class="mt-2 text-3xl font-bold text-slate-800">
+                {{ $activeKabidCount }}
+            </p>
+        </a>
+    </div>
 
 
-                            <div>
+    <div class="grid gap-6 xl:grid-cols-2">
 
-                                <p
-                                    class="text-sm font-semibold
-                                               text-slate-800">
-                                    {{ $leave->user->name }}
-                                </p>
+        {{-- CUTI SIAP ADMIN --}}
+        <div
+            class="overflow-hidden rounded-xl border
+                   border-slate-200 bg-white shadow-sm">
 
-                                <p class="text-xs text-slate-400">
-                                    {{ $leave->user->nik ?? '-' }}
-                                </p>
+            <div
+                class="flex items-center justify-between gap-3
+                       border-b border-slate-200 px-5 py-4">
 
-                            </div>
+                <div>
+                    <h2 class="font-semibold text-slate-800">
+                        Perlu Keputusan Admin
+                    </h2>
 
+                    <p class="mt-1 text-xs text-slate-500">
+                        Lima pengajuan cuti terbaru yang sudah siap diproses.
+                    </p>
+                </div>
+
+                <a
+                    href="{{ route(
+                        'admin.leave-requests.index',
+                        ['workflow' => 'ready_admin']
+                    ) }}"
+                    class="text-sm font-semibold text-blue-600 hover:text-blue-700">
+                    Lihat semua
+                </a>
+            </div>
+
+
+            <div class="divide-y divide-slate-100">
+
+                @forelse($readyAdminLeaveRequests as $leave)
+
+                <a
+                    href="{{ route(
+                            'admin.leave-requests.show',
+                            $leave
+                        ) }}"
+                    class="block p-5 transition hover:bg-slate-50">
+
+                    <div class="flex items-start justify-between gap-3">
+
+                        <div>
+                            <p class="font-semibold text-slate-800">
+                                {{ $leave->user?->name ?? '-' }}
+                            </p>
+
+                            <p class="mt-1 text-sm text-slate-600">
+                                {{ $leave->permissionType?->name ?? 'Perizinan' }}
+                            </p>
+
+                            <p class="mt-1 text-xs text-slate-500">
+                                {{ $leave->start_date?->format('d/m/Y') }}
+                                -
+                                {{ $leave->end_date?->format('d/m/Y') }}
+                                • {{ $leave->total_days }} hari
+                            </p>
                         </div>
 
-                    </td>
-
-
-                    {{-- Bidang --}}
-                    <td
-                        class="whitespace-nowrap
-                                   px-6 py-4 text-sm
-                                   text-slate-600">
-                        {{ $leave->user->department?->name ?? '-' }}
-                    </td>
-
-
-                    {{-- Tanggal --}}
-                    <td
-                        class="whitespace-nowrap
-                                   px-6 py-4 text-sm
-                                   text-slate-600">
-
-                        {{ $leave->start_date->format('d/m/Y') }}
-
-                        @if(
-                        $leave->start_date->format('Y-m-d')
-                        !==
-                        $leave->end_date->format('Y-m-d')
-                        )
-
-                        -
-
-                        {{ $leave->end_date->format('d/m/Y') }}
-
-                        @endif
-
-                    </td>
-
-
-                    {{-- Total Hari --}}
-                    <td
-                        class="whitespace-nowrap
-                                   px-6 py-4 text-sm
-                                   text-slate-600">
-                        {{ $leave->total_days }} hari
-                    </td>
-
-
-                    {{-- Status --}}
-                    <td class="whitespace-nowrap px-6 py-4">
-
-                        @if($leave->status === 'pending')
 
                         <span
-                            class="inline-flex rounded-full
-                                           bg-amber-50 px-2.5 py-1
-                                           text-xs font-medium
-                                           text-amber-700">
-                            Menunggu
+                            class="shrink-0 rounded-full bg-blue-50
+                                       px-2.5 py-1 text-xs font-semibold
+                                       text-blue-700">
+                            Proses
                         </span>
+                    </div>
 
 
-                        @elseif($leave->status === 'approved')
+                    @if(
+                    $leave->kabid_status
+                    === \App\Models\LeaveRequest::KABID_STATUS_APPROVED
+                    )
 
-                        <span
-                            class="inline-flex rounded-full
-                                           bg-emerald-50 px-2.5 py-1
-                                           text-xs font-medium
-                                           text-emerald-700">
-                            Disetujui
-                        </span>
+                    <p class="mt-3 text-xs text-emerald-600">
+                        ✓ ACC {{ $leave->kabidReviewer?->name ?? 'Kabid' }}
+                    </p>
 
+                    @else
 
-                        @else
+                    <p class="mt-3 text-xs text-slate-500">
+                        Tahap Kabid tidak diperlukan.
+                    </p>
 
-                        <span
-                            class="inline-flex rounded-full
-                                           bg-red-50 px-2.5 py-1
-                                           text-xs font-medium
-                                           text-red-700">
-                            Ditolak
-                        </span>
-
-                        @endif
-
-                    </td>
-
-
-                    {{-- Detail --}}
-                    <td
-                        class="whitespace-nowrap
-                                   px-6 py-4 text-right">
-
-                        <a
-                            href="{{ route(
-                                    'admin.leave-requests.show',
-                                    $leave
-                                ) }}"
-                            class="inline-flex rounded-lg
-                                       bg-blue-50 px-3 py-2
-                                       text-xs font-medium
-                                       text-blue-700
-                                       hover:bg-blue-100">
-                            Detail
-                        </a>
-
-                    </td>
-
-                </tr>
-
+                    @endif
+                </a>
 
                 @empty
 
-                <tr>
-
-                    <td
-                        colspan="6"
-                        class="px-6 py-12
-                                   text-center text-sm
-                                   text-slate-500">
-                        Belum ada pengajuan cuti.
-                    </td>
-
-                </tr>
+                <div class="p-8 text-center text-sm text-slate-500">
+                    Tidak ada pengajuan cuti yang menunggu keputusan Admin.
+                </div>
 
                 @endforelse
+            </div>
+        </div>
 
-            </tbody>
 
-        </table>
+        {{-- VERIFIKASI USER --}}
+        <div
+            class="overflow-hidden rounded-xl border
+                   border-slate-200 bg-white shadow-sm">
 
+            <div class="border-b border-slate-200 px-5 py-4">
+
+                <h2 class="font-semibold text-slate-800">
+                    Menunggu Verifikasi Akun
+                </h2>
+
+                <p class="mt-1 text-xs text-slate-500">
+                    Pendaftar Karyawan/Kabid terbaru.
+                </p>
+            </div>
+
+
+            <div class="divide-y divide-slate-100">
+
+                @forelse($pendingUsers as $pendingUser)
+
+                <div class="p-5">
+
+                    <div class="flex items-start justify-between gap-3">
+
+                        <div>
+                            <p class="font-semibold text-slate-800">
+                                {{ $pendingUser->name }}
+                            </p>
+
+                            <p class="mt-1 text-xs text-slate-500">
+                                {{ $pendingUser->department?->name ?? '-' }}
+                            </p>
+                        </div>
+
+
+                        <span
+                            class="{{
+                                    $pendingUser->role === 'kabid'
+                                        ? 'bg-violet-50 text-violet-700'
+                                        : 'bg-blue-50 text-blue-700'
+                                }} rounded-full px-2.5 py-1
+                                   text-xs font-semibold">
+
+                            {{
+                                    $pendingUser->role === 'kabid'
+                                        ? 'Kabid'
+                                        : 'Karyawan'
+                                }}
+                        </span>
+                    </div>
+
+
+                    <a
+                        href="{{
+                                $pendingUser->role === 'kabid'
+                                    ? route(
+                                        'admin.kabid.index',
+                                        ['approval_status' => 'pending']
+                                    )
+                                    : route(
+                                        'admin.karyawan.index',
+                                        ['approval_status' => 'pending']
+                                    )
+                            }}"
+                        class="mt-3 inline-flex text-xs font-semibold
+                                   text-blue-600 hover:text-blue-700">
+                        Buka verifikasi →
+                    </a>
+                </div>
+
+                @empty
+
+                <div class="p-8 text-center text-sm text-slate-500">
+                    Tidak ada akun yang menunggu verifikasi.
+                </div>
+
+                @endforelse
+            </div>
+        </div>
     </div>
-
 </div>
 
 @endsection

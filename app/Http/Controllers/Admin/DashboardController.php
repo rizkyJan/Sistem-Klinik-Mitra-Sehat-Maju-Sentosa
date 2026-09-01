@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\LeaveRequest;
+use App\Models\Reimbursement;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -12,71 +13,150 @@ class DashboardController extends Controller
 {
     public function index(Request $request): View
     {
+        /** @var User $user */
         $user = $request->user();
 
-        /*
-        |--------------------------------------------------------------------------
-        | Hanya Admin / Kabid
-        |--------------------------------------------------------------------------
-        */
-
         abort_unless(
-            in_array($user->role, ['admin', 'kabid'], true),
+            $user->role === 'admin',
             403
         );
 
-
         /*
         |--------------------------------------------------------------------------
-        | Statistik Dashboard
+        | Pegawai Aktif
         |--------------------------------------------------------------------------
         */
-
-        $totalKaryawan = User::query()
+        $activeKaryawanCount = User::query()
             ->where('role', 'karyawan')
+            ->where('approval_status', 'approved')
+            ->where('is_active', true)
             ->count();
 
-
-        $pendingCount = LeaveRequest::query()
-            ->where('status', 'pending')
+        $activeKabidCount = User::query()
+            ->where('role', 'kabid')
+            ->where('approval_status', 'approved')
+            ->where('is_active', true)
             ->count();
-
-
-        $approvedCount = LeaveRequest::query()
-            ->where('status', 'approved')
-            ->count();
-
-
-        $rejectedCount = LeaveRequest::query()
-            ->where('status', 'rejected')
-            ->count();
-
 
         /*
         |--------------------------------------------------------------------------
-        | Pengajuan Terbaru
+        | Verifikasi Akun
         |--------------------------------------------------------------------------
         */
+        $pendingKaryawanVerificationCount = User::query()
+            ->where('role', 'karyawan')
+            ->where('approval_status', 'pending')
+            ->count();
 
-        $recentLeaveRequests = LeaveRequest::query()
+        $pendingKabidVerificationCount = User::query()
+            ->where('role', 'kabid')
+            ->where('approval_status', 'pending')
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Workflow Cuti
+        |--------------------------------------------------------------------------
+        |
+        | Siap Admin:
+        | - sudah ACC Kabid;
+        | - atau memang tidak membutuhkan Kabid.
+        |
+        */
+        $readyAdminLeaveCount = LeaveRequest::query()
+            ->where('status', 'pending')
+            ->whereIn(
+                'kabid_status',
+                [
+                    LeaveRequest::KABID_STATUS_APPROVED,
+                    LeaveRequest::KABID_STATUS_NOT_REQUIRED,
+                ]
+            )
+            ->count();
+
+        $waitingKabidLeaveCount = LeaveRequest::query()
+            ->where('status', 'pending')
+            ->where(
+                'kabid_status',
+                LeaveRequest::KABID_STATUS_PENDING
+            )
+            ->whereHas(
+                'user',
+                fn($query) =>
+                $query->where('role', 'karyawan')
+            )
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Reimburse
+        |--------------------------------------------------------------------------
+        */
+        $pendingReimbursementCount = Reimbursement::query()
+            ->where(
+                'status',
+                Reimbursement::STATUS_PENDING
+            )
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Pengajuan Cuti Siap Diproses Terbaru
+        |--------------------------------------------------------------------------
+        */
+        $readyAdminLeaveRequests = LeaveRequest::query()
             ->with([
                 'user.department',
-                'approver',
+                'permissionType',
+                'kabidReviewer',
             ])
+            ->where('status', 'pending')
+            ->whereIn(
+                'kabid_status',
+                [
+                    LeaveRequest::KABID_STATUS_APPROVED,
+                    LeaveRequest::KABID_STATUS_NOT_REQUIRED,
+                ]
+            )
             ->latest()
             ->limit(5)
             ->get();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Pendaftar Terbaru Menunggu Verifikasi
+        |--------------------------------------------------------------------------
+        */
+        $pendingUsers = User::query()
+            ->with('department')
+            ->whereIn(
+                'role',
+                [
+                    'karyawan',
+                    'kabid',
+                ]
+            )
+            ->where(
+                'approval_status',
+                'pending'
+            )
+            ->latest()
+            ->limit(5)
+            ->get();
 
         return view(
             'admin.dashboard',
             compact(
                 'user',
-                'totalKaryawan',
-                'pendingCount',
-                'approvedCount',
-                'rejectedCount',
-                'recentLeaveRequests'
+                'activeKaryawanCount',
+                'activeKabidCount',
+                'pendingKaryawanVerificationCount',
+                'pendingKabidVerificationCount',
+                'readyAdminLeaveCount',
+                'waitingKabidLeaveCount',
+                'pendingReimbursementCount',
+                'readyAdminLeaveRequests',
+                'pendingUsers'
             )
         );
     }

@@ -12,7 +12,7 @@ use Illuminate\View\View;
 class AuthenticatedSessionController extends Controller
 {
     /**
-     * Display the login view.
+     * Menampilkan halaman login.
      */
     public function create(): View
     {
@@ -20,7 +20,7 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Handle an incoming authentication request.
+     * Memproses login user.
      */
     public function store(LoginRequest $request): RedirectResponse
     {
@@ -30,25 +30,43 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        if ($user->role === 'admin' || $user->role === 'kabid') {
+        /*
+        |--------------------------------------------------------------------------
+        | REDIRECT BERDASARKAN ROLE
+        |--------------------------------------------------------------------------
+        |
+        | Setiap role diarahkan ke dashboard miliknya sendiri.
+        | Menggunakan redirect()->route() agar Kabid tidak lagi diarahkan
+        | ke intended URL milik Admin dari session sebelumnya.
+        |
+        */
 
-            return redirect()->intended(
-                route('admin.dashboard', absolute: false)
-            );
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($user->role === 'kabid') {
+            return redirect()->route('kabid.dashboard');
         }
 
         if ($user->role === 'karyawan') {
-
-            return redirect()->intended(
-                route('karyawan.dashboard', absolute: false)
-            );
+            return redirect()->route('karyawan.dashboard');
         }
 
-        return redirect('/');
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()
+            ->route('login')
+            ->withErrors([
+                'email' => 'Role akun tidak dikenali. Silakan hubungi administrator.',
+            ]);
     }
 
     /**
-     * Destroy an authenticated session.
+     * Logout user.
      */
     public function destroy(Request $request): RedirectResponse
     {

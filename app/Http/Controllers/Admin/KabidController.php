@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Department;
-use App\Models\LeaveRequest;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -12,9 +11,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
-class KaryawanController extends Controller
+class KabidController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
@@ -25,19 +25,17 @@ class KaryawanController extends Controller
     public function index(Request $request): View
     {
         $search = $request->input('search');
+        $approvalStatus = $request->input('approval_status');
 
-
-        $karyawan = User::query()
+        $kabids = User::query()
             ->with('department')
-            ->where('role', 'karyawan')
+            ->where('role', 'kabid')
 
             ->when(
                 $search,
                 function ($query, $search) {
-
                     $query->where(
                         function ($query) use ($search) {
-
                             $query
                                 ->where(
                                     'name',
@@ -62,7 +60,6 @@ class KaryawanController extends Controller
                                 ->orWhereHas(
                                     'department',
                                     function ($query) use ($search) {
-
                                         $query->where(
                                             'name',
                                             'like',
@@ -75,16 +72,28 @@ class KaryawanController extends Controller
                 }
             )
 
+            ->when(
+                $approvalStatus,
+                fn($query, $approvalStatus) =>
+                $query->where(
+                    'approval_status',
+                    $approvalStatus
+                )
+            )
+
             ->latest()
 
             ->paginate(10)
 
             ->withQueryString();
 
-
         return view(
-            'admin.karyawan.index',
-            compact('karyawan')
+            'admin.kabid.index',
+            compact(
+                'kabids',
+                'search',
+                'approvalStatus'
+            )
         );
     }
 
@@ -97,14 +106,29 @@ class KaryawanController extends Controller
 
     public function create(): View
     {
+        /*
+         * Satu bidang hanya boleh memiliki satu Kabid.
+         *
+         * Ambil ID bidang yang sudah dipakai oleh Kabid,
+         * lalu sembunyikan dari pilihan Tambah Kabid.
+         */
+        $usedDepartmentIds = User::query()
+            ->where('role', 'kabid')
+            ->where('approval_status', 'approved')
+            ->whereNotNull('department_id')
+            ->pluck('department_id');
+
         $departments = Department::query()
             ->where('is_active', true)
+            ->whereNotIn(
+                'id',
+                $usedDepartmentIds
+            )
             ->orderBy('name')
             ->get();
 
-
         return view(
-            'admin.karyawan.create',
+            'admin.kabid.create',
             compact('departments')
         );
     }
@@ -148,12 +172,6 @@ class KaryawanController extends Controller
                     'max:20',
                 ],
 
-                /*
-                |--------------------------------------------------------------------------
-                | Tanggal mulai kerja
-                |--------------------------------------------------------------------------
-                */
-
                 'join_date' => [
                     'required',
                     'date',
@@ -189,7 +207,7 @@ class KaryawanController extends Controller
             ],
             [
                 'name.required' =>
-                'Nama karyawan wajib diisi.',
+                'Nama Kabid wajib diisi.',
 
                 'nik.required' =>
                 'NIK wajib diisi.',
@@ -234,53 +252,94 @@ class KaryawanController extends Controller
                 'Konfirmasi password tidak sama.',
 
                 'is_active.required' =>
-                'Status karyawan wajib dipilih.',
+                'Status Kabid wajib dipilih.',
             ]
         );
 
+        DB::transaction(
+            function () use ($validated) {
 
-        User::create([
-            'name' =>
-            $validated['name'],
+                /*
+                 * Lock bidang yang dipilih agar dua proses tidak
+                 * dapat membuat dua Kabid untuk bidang yang sama
+                 * pada waktu yang bersamaan.
+                 */
+                Department::query()
+                    ->whereKey(
+                        $validated['department_id']
+                    )
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-            'nik' =>
-            $validated['nik'],
+                $departmentAlreadyHasKabid =
+                    User::query()
+                    ->where('role', 'kabid')
+                    ->where('approval_status', 'approved')
+                    ->where(
+                        'department_id',
+                        $validated['department_id']
+                    )
+                    ->exists();
 
-            'email' =>
-            $validated['email'],
+                if ($departmentAlreadyHasKabid) {
+                    throw ValidationException::withMessages([
+                        'department_id' =>
+                        'Bidang yang dipilih sudah memiliki Kabid. '
+                            . 'Satu bidang hanya boleh memiliki satu Kabid.',
+                    ]);
+                }
 
-            'whatsapp' =>
-            $validated['whatsapp'],
+                User::create([
+                    'name' =>
+                    $validated['name'],
 
-            'join_date' =>
-            $validated['join_date'],
+                    'nik' =>
+                    $validated['nik'],
 
-            'department_id' =>
-            $validated['department_id'],
+                    'email' =>
+                    $validated['email'],
 
-            'password' =>
-            Hash::make(
-                $validated['password']
-            ),
+                    'whatsapp' =>
+                    $validated['whatsapp'],
 
-            'role' =>
-            'karyawan',
+                    'join_date' =>
+                    $validated['join_date'],
 
-            'is_active' =>
-            (bool) $validated['is_active'],
+                    'department_id' =>
+                    $validated['department_id'],
 
-            /*
-             * Untuk karyawan yang dibuat langsung
-             * oleh Admin, kita anggap sudah disetujui.
-             */
-        ]);
+                    'password' =>
+                    Hash::make(
+                        $validated['password']
+                    ),
 
+                    'role' =>
+                    'kabid',
+
+                    'is_active' =>
+                    (bool) $validated['is_active'],
+
+                    /*
+                     * Kabid yang dibuat langsung oleh Admin
+                     * tidak perlu melalui proses verifikasi ulang.
+                     */
+                    'approval_status' =>
+                    'approved',
+
+                    'approval_rejection_reason' =>
+                    null,
+
+                    'profile_completed_at' =>
+                    now(),
+                ]);
+            }
+        );
 
         return redirect()
-            ->route('admin.karyawan.index')
+            ->route('admin.kabid.index')
             ->with(
                 'success',
-                'Data karyawan berhasil ditambahkan.'
+                'Data Kabid berhasil ditambahkan.'
             );
     }
 
@@ -292,23 +351,37 @@ class KaryawanController extends Controller
     */
 
     public function edit(
-        User $karyawan
+        User $kabid
     ): View {
 
-        $this->ensureKaryawan(
-            $karyawan
+        $this->ensureKabid(
+            $kabid
         );
 
+        /*
+         * Saat edit:
+         * - bidang milik Kabid ini sendiri tetap boleh dipilih;
+         * - bidang yang sudah dipakai Kabid lain tidak ditampilkan.
+         */
+        $usedDepartmentIds = User::query()
+            ->where('role', 'kabid')
+            ->where('approval_status', 'approved')
+            ->whereKeyNot($kabid->id)
+            ->whereNotNull('department_id')
+            ->pluck('department_id');
 
         $departments = Department::query()
+            ->whereNotIn(
+                'id',
+                $usedDepartmentIds
+            )
             ->orderBy('name')
             ->get();
 
-
         return view(
-            'admin.karyawan.edit',
+            'admin.kabid.edit',
             compact(
-                'karyawan',
+                'kabid',
                 'departments'
             )
         );
@@ -323,13 +396,12 @@ class KaryawanController extends Controller
 
     public function update(
         Request $request,
-        User $karyawan
+        User $kabid
     ): RedirectResponse {
 
-        $this->ensureKaryawan(
-            $karyawan
+        $this->ensureKabid(
+            $kabid
         );
-
 
         $validated = $request->validate(
             [
@@ -348,7 +420,7 @@ class KaryawanController extends Controller
                         'users',
                         'nik'
                     )->ignore(
-                        $karyawan->id
+                        $kabid->id
                     ),
                 ],
 
@@ -361,7 +433,7 @@ class KaryawanController extends Controller
                         'users',
                         'email'
                     )->ignore(
-                        $karyawan->id
+                        $kabid->id
                     ),
                 ],
 
@@ -379,22 +451,9 @@ class KaryawanController extends Controller
 
                 'department_id' => [
                     'required',
-
-                    Rule::exists(
-                        'departments',
-                        'id'
-                    )->where(
-                        fn($query) =>
-                        $query->where(
-                            'is_active',
-                            true
-                        )
-                    ),
+                    'exists:departments,id',
                 ],
 
-                /*
-                 * Password kosong berarti tidak diganti.
-                 */
                 'password' => [
                     'nullable',
                     'string',
@@ -406,11 +465,10 @@ class KaryawanController extends Controller
                     'required',
                     'boolean',
                 ],
-
             ],
             [
                 'name.required' =>
-                'Nama karyawan wajib diisi.',
+                'Nama Kabid wajib diisi.',
 
                 'nik.required' =>
                 'NIK wajib diisi.',
@@ -444,10 +502,8 @@ class KaryawanController extends Controller
 
                 'password.confirmed' =>
                 'Konfirmasi password tidak sama.',
-
             ]
         );
-
 
         $data = [
             'name' =>
@@ -472,111 +528,68 @@ class KaryawanController extends Controller
             (bool) $validated['is_active'],
 
             /*
-             * Halaman Kelola Karyawan tidak boleh mengubah role.
-             * Perubahan role harus melalui fitur manajemen role yang sesuai.
+             * Role tidak diambil dari request.
+             * Halaman Kelola Kabid selalu mempertahankan role Kabid.
              */
             'role' =>
-            'karyawan',
+            'kabid',
         ];
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Password hanya diubah kalau diisi
-        |--------------------------------------------------------------------------
-        */
 
         if (
             ! empty($validated['password'])
         ) {
-
             $data['password'] =
                 Hash::make(
                     $validated['password']
                 );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Update Aman + Reset Approval Kabid Jika Pindah Bidang
-        |--------------------------------------------------------------------------
-        |
-        | Jika Karyawan dipindahkan ke bidang lain saat masih memiliki
-        | pengajuan pending yang SUDAH disetujui Kabid lama, persetujuan
-        | tersebut tidak boleh ikut terbawa ke bidang baru.
-        |
-        | Yang di-reset hanya pengajuan:
-        | - status final masih pending;
-        | - tahap Kabid masih pending / approved.
-        |
-        | Data final approved/rejected tidak disentuh.
-        | Data legacy not_required juga tidak diubah.
-        |
-        */
-
         DB::transaction(
             function () use (
-                $karyawan,
+                $validated,
                 $data,
-                $validated
+                $kabid
             ) {
-                /** @var User $current */
-                $current = User::query()
+
+                Department::query()
                     ->whereKey(
-                        $karyawan->id
+                        $validated['department_id']
                     )
                     ->lockForUpdate()
                     ->firstOrFail();
 
-                $departmentChanged =
-                    (int) $current->department_id
-                    !== (int) $validated['department_id'];
+                $departmentAlreadyHasKabid =
+                    User::query()
+                    ->where('role', 'kabid')
+                    ->where('approval_status', 'approved')
+                    ->where(
+                        'department_id',
+                        $validated['department_id']
+                    )
+                    ->whereKeyNot(
+                        $kabid->id
+                    )
+                    ->exists();
 
-                $current->update(
+                if ($departmentAlreadyHasKabid) {
+                    throw ValidationException::withMessages([
+                        'department_id' =>
+                        'Bidang yang dipilih sudah memiliki Kabid lain. '
+                            . 'Satu bidang hanya boleh memiliki satu Kabid.',
+                    ]);
+                }
+
+                $kabid->update(
                     $data
                 );
-
-                if ($departmentChanged) {
-                    LeaveRequest::query()
-                        ->where(
-                            'user_id',
-                            $current->id
-                        )
-                        ->where(
-                            'status',
-                            'pending'
-                        )
-                        ->whereIn(
-                            'kabid_status',
-                            [
-                                LeaveRequest::KABID_STATUS_PENDING,
-                                LeaveRequest::KABID_STATUS_APPROVED,
-                            ]
-                        )
-                        ->update([
-                            'kabid_status' =>
-                            LeaveRequest::KABID_STATUS_PENDING,
-
-                            'kabid_reviewed_by' =>
-                            null,
-
-                            'kabid_reviewed_at' =>
-                            null,
-
-                            'kabid_rejection_reason' =>
-                            null,
-                        ]);
-                }
             }
         );
 
-
         return redirect()
-            ->route('admin.karyawan.index')
+            ->route('admin.kabid.index')
             ->with(
                 'success',
-                'Data karyawan berhasil diperbarui.'
+                'Data Kabid berhasil diperbarui.'
             );
     }
 
@@ -588,41 +601,23 @@ class KaryawanController extends Controller
     */
 
     public function destroy(
-        User $karyawan
+        User $kabid
     ): RedirectResponse {
 
-        $this->ensureKaryawan(
-            $karyawan
+        $this->ensureKabid(
+            $kabid
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Jangan hard delete jika sudah punya riwayat penting
-        |--------------------------------------------------------------------------
-        |
-        | Data perizinan dan reimbursement adalah data histori.
-        | Kalau user dihapus paksa, relasi foreign key dapat bentrok
-        | atau histori operasional/keuangan ikut hilang.
-        |
-        | Solusi yang lebih aman:
-        | - Karyawan tanpa histori -> boleh dihapus.
-        | - Karyawan dengan histori -> jangan dihapus, nonaktifkan saja.
-        |
-        */
-
         $leaveRequestCount =
-            $karyawan->leaveRequests()->count();
+            $kabid->leaveRequests()->count();
 
         $reimbursementCount =
-            $karyawan->reimbursements()->count();
-
+            $kabid->reimbursements()->count();
 
         if (
             $leaveRequestCount > 0
             || $reimbursementCount > 0
         ) {
-
             $relatedData = [];
 
             if ($leaveRequestCount > 0) {
@@ -637,154 +632,161 @@ class KaryawanController extends Controller
                     . ' riwayat reimbursement';
             }
 
-
             return redirect()
-                ->route('admin.karyawan.index')
+                ->route('admin.kabid.index')
                 ->with(
                     'error',
-                    'Data karyawan "'
-                        . $karyawan->name
+                    'Data Kabid "'
+                        . $kabid->name
                         . '" tidak dapat dihapus karena masih memiliki '
                         . implode(' dan ', $relatedData)
                         . '. Nonaktifkan akun melalui menu Edit agar riwayat tetap aman.'
                 );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Fallback database protection
-        |--------------------------------------------------------------------------
-        |
-        | Walaupun pengecekan di atas sudah dilakukan, foreign key lain
-        | mungkin ditambahkan di masa depan. Tangkap QueryException agar
-        | user tidak mendapat halaman Internal Server Error.
-        |
-        */
-
         try {
-
-            $karyawan->delete();
+            $kabid->delete();
         } catch (QueryException $exception) {
-
             report($exception);
 
-
             return redirect()
-                ->route('admin.karyawan.index')
+                ->route('admin.kabid.index')
                 ->with(
                     'error',
-                    'Data karyawan tidak dapat dihapus karena masih digunakan oleh data lain. '
-                        . 'Silakan nonaktifkan akun karyawan melalui menu Edit.'
+                    'Data Kabid tidak dapat dihapus karena masih digunakan oleh data lain. '
+                        . 'Silakan nonaktifkan akun melalui menu Edit.'
                 );
         }
 
-
         return redirect()
-            ->route('admin.karyawan.index')
+            ->route('admin.kabid.index')
             ->with(
                 'success',
-                'Data karyawan berhasil dihapus.'
+                'Data Kabid berhasil dihapus.'
             );
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | Security
+    | Approve / ACC Kabid
     |--------------------------------------------------------------------------
     */
 
-    private function ensureKaryawan(
-        User $user
-    ): void {
+    public function approve(
+        User $kabid
+    ): RedirectResponse {
 
-        abort_unless(
-            $user->role === 'karyawan',
-            404
-        );
-    }
-
-    /*
-|--------------------------------------------------------------------------
-| Approve / ACC Karyawan
-|--------------------------------------------------------------------------
-*/
-
-    public function approve(User $karyawan): RedirectResponse
-    {
-        /*
-     * Pastikan user memang karyawan.
-     */
-        abort_unless(
-            $karyawan->role === 'karyawan',
-            404
+        $this->ensureKabid(
+            $kabid
         );
 
-
-        /*
-     * Karyawan harus sudah melengkapi profil.
-     */
-        if (! $karyawan->profile_completed_at) {
-
+        if (! $kabid->profile_completed_at) {
             return redirect()
-                ->route('admin.karyawan.index')
+                ->route('admin.kabid.index')
                 ->withErrors([
                     'approval' =>
-                    'Data karyawan belum lengkap dan belum dapat di-ACC.'
+                    'Data Kabid belum lengkap dan belum dapat di-ACC.'
                 ]);
         }
 
+        if (! $kabid->department_id) {
+            return redirect()
+                ->route('admin.kabid.index')
+                ->withErrors([
+                    'approval' =>
+                    'Kabid belum memiliki bidang dan belum dapat di-ACC.'
+                ]);
+        }
 
-        /*
-     * Aktifkan akun.
-     */
-        $karyawan->update([
-            'approval_status' => 'approved',
-            'approval_rejection_reason' => null,
-            'is_active' => true,
-        ]);
+        DB::transaction(
+            function () use ($kabid) {
 
+                /*
+                 * Lock bidang saat proses ACC agar dua calon Kabid
+                 * pada bidang yang sama tidak bisa disetujui bersamaan.
+                 */
+                Department::query()
+                    ->whereKey(
+                        $kabid->department_id
+                    )
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                /*
+                 * Pending tidak dihitung.
+                 * Yang mengunci bidang hanya Kabid yang SUDAH approved.
+                 */
+                $departmentAlreadyHasApprovedKabid =
+                    User::query()
+                    ->where('role', 'kabid')
+                    ->where('approval_status', 'approved')
+                    ->where(
+                        'department_id',
+                        $kabid->department_id
+                    )
+                    ->whereKeyNot(
+                        $kabid->id
+                    )
+                    ->exists();
+
+                if (
+                    $departmentAlreadyHasApprovedKabid
+                ) {
+                    throw ValidationException::withMessages([
+                        'approval' =>
+                        'Bidang '
+                            . ($kabid->department?->name ?? 'yang dipilih')
+                            . ' sudah memiliki Kabid yang telah disetujui. '
+                            . 'Satu bidang hanya boleh memiliki satu Kabid resmi.',
+                    ]);
+                }
+
+                $kabid->update([
+                    'approval_status' =>
+                    'approved',
+
+                    'approval_rejection_reason' =>
+                    null,
+
+                    'is_active' =>
+                    true,
+                ]);
+            }
+        );
 
         return redirect()
-            ->route('admin.karyawan.index')
+            ->route('admin.kabid.index')
             ->with(
                 'success',
-                'Karyawan ' .
-                    $karyawan->name .
-                    ' berhasil di-ACC. Akun sekarang sudah aktif.'
+                'Kabid '
+                    . $kabid->name
+                    . ' berhasil di-ACC. Akun sekarang sudah aktif.'
             );
     }
 
+
     /*
-|--------------------------------------------------------------------------
-| Reject / Tolak Karyawan
-|--------------------------------------------------------------------------
-*/
+    |--------------------------------------------------------------------------
+    | Reject / Tolak Kabid
+    |--------------------------------------------------------------------------
+    */
 
     public function reject(
         Request $request,
-        User $karyawan
+        User $kabid
     ): RedirectResponse {
 
-        /*
-     * Pastikan user memang karyawan.
-     */
-        abort_unless(
-            $karyawan->role === 'karyawan',
-            404
+        $this->ensureKabid(
+            $kabid
         );
 
-
-        /*
-     * Validasi alasan penolakan.
-     */
         $validated = $request->validate(
             [
                 'reason' => [
                     'required',
                     'string',
-                    'max:1000'
+                    'max:1000',
                 ],
             ],
             [
@@ -793,11 +795,7 @@ class KaryawanController extends Controller
             ]
         );
 
-
-        /*
-     * Tolak verifikasi.
-     */
-        $karyawan->update([
+        $kabid->update([
             'approval_status' =>
             'rejected',
 
@@ -808,14 +806,30 @@ class KaryawanController extends Controller
             false,
         ]);
 
-
         return redirect()
-            ->route('admin.karyawan.index')
+            ->route('admin.kabid.index')
             ->with(
                 'success',
-                'Data ' .
-                    $karyawan->name .
-                    ' ditolak dan dikembalikan untuk diperbaiki.'
+                'Data Kabid '
+                    . $kabid->name
+                    . ' ditolak dan dikembalikan untuk diperbaiki.'
             );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Security
+    |--------------------------------------------------------------------------
+    */
+
+    private function ensureKabid(
+        User $user
+    ): void {
+
+        abort_unless(
+            $user->role === 'kabid',
+            404
+        );
     }
 }

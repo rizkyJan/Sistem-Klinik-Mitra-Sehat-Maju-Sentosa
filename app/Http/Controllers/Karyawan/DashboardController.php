@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Karyawan;
 
 use App\Http\Controllers\Controller;
+use App\Models\LeaveRequest;
+use App\Models\Reimbursement;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -10,144 +13,175 @@ class DashboardController extends Controller
 {
     public function index(Request $request): View
     {
-        /*
-        |--------------------------------------------------------------------------
-        | User Login
-        |--------------------------------------------------------------------------
-        */
-
+        /** @var User $user */
         $user = $request->user();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Pastikan hanya karyawan
-        |--------------------------------------------------------------------------
-        */
-
         abort_unless(
-            $user->role === 'karyawan',
+            $user->role === 'karyawan'
+                && $user->approval_status === 'approved'
+                && $user->is_active,
             403
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Load bidang
-        |--------------------------------------------------------------------------
-        */
-
         $user->load('department');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Tahun berjalan
-        |--------------------------------------------------------------------------
-        */
 
         $year = now()->year;
 
+        /*
+        |--------------------------------------------------------------------------
+        | Workflow Cuti Karyawan Tahun Berjalan
+        |--------------------------------------------------------------------------
+        */
+        $leaveQuery = LeaveRequest::query()
+            ->where(
+                'user_id',
+                $user->id
+            )
+            ->whereYear(
+                'start_date',
+                $year
+            );
+
+        $waitingKabidCount =
+            (clone $leaveQuery)
+            ->where('status', 'pending')
+            ->where(
+                'kabid_status',
+                LeaveRequest::KABID_STATUS_PENDING
+            )
+            ->count();
+
+        $waitingAdminCount =
+            (clone $leaveQuery)
+            ->where('status', 'pending')
+            ->whereIn(
+                'kabid_status',
+                [
+                    LeaveRequest::KABID_STATUS_APPROVED,
+                    LeaveRequest::KABID_STATUS_NOT_REQUIRED,
+                ]
+            )
+            ->count();
+
+        $approvedLeaveCount =
+            (clone $leaveQuery)
+            ->where(
+                'status',
+                'approved'
+            )
+            ->count();
+
+        $rejectedLeaveCount =
+            (clone $leaveQuery)
+            ->where(
+                'status',
+                'rejected'
+            )
+            ->count();
 
         /*
         |--------------------------------------------------------------------------
-        | Jatah Cuti Tahun Berjalan
+        | Saldo Cuti Tahun Berjalan
         |--------------------------------------------------------------------------
         */
-
-        $balance = $user
+        $leaveBalance = $user
             ->leaveBalances()
-            ->where('year', $year)
+            ->where(
+                'year',
+                $year
+            )
             ->first();
 
+        $pendingAnnualDays = 0;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Sisa Cuti
-        |--------------------------------------------------------------------------
-        |
-        | Misalnya:
-        |
-        | quota_days = 9
-        | used_days  = 2
-        |
-        | remaining = 7
-        |
-        */
+        if ($leaveBalance) {
+            $pendingAnnualDays = LeaveRequest::query()
+                ->where(
+                    'user_id',
+                    $user->id
+                )
+                ->where(
+                    'leave_balance_id',
+                    $leaveBalance->id
+                )
+                ->where(
+                    'status',
+                    'pending'
+                )
+                ->sum(
+                    'annual_leave_deducted_days'
+                );
+        }
 
-        $remainingLeave = $balance
-            ? $balance->remaining_days
+        $availableAnnualLeave = $leaveBalance
+            ? max(
+                0,
+                $leaveBalance->quota_days
+                    - $leaveBalance->used_days
+                    - $pendingAnnualDays
+            )
             : 0;
 
-
         /*
         |--------------------------------------------------------------------------
-        | Pengajuan Pending
+        | Reimburse Pribadi
         |--------------------------------------------------------------------------
         */
-
-        $pendingCount = $user
-            ->leaveRequests()
-            ->whereYear('start_date', $year)
-            ->where('status', 'pending')
+        $pendingReimbursementCount = Reimbursement::query()
+            ->where(
+                'user_id',
+                $user->id
+            )
+            ->where(
+                'status',
+                Reimbursement::STATUS_PENDING
+            )
             ->count();
 
+        $paidReimbursementTotal = (int) Reimbursement::query()
+            ->where(
+                'user_id',
+                $user->id
+            )
+            ->where(
+                'status',
+                Reimbursement::STATUS_PAID
+            )
+            ->sum('amount');
 
         /*
         |--------------------------------------------------------------------------
-        | Pengajuan Disetujui
+        | Riwayat Cuti Terbaru
         |--------------------------------------------------------------------------
         */
-
-        $approvedCount = $user
-            ->leaveRequests()
-            ->whereYear('start_date', $year)
-            ->where('status', 'approved')
-            ->count();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Pengajuan Ditolak
-        |--------------------------------------------------------------------------
-        */
-
-        $rejectedCount = $user
-            ->leaveRequests()
-            ->whereYear('start_date', $year)
-            ->where('status', 'rejected')
-            ->count();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Pengajuan Terakhir
-        |--------------------------------------------------------------------------
-        */
-
-        $recentLeaveRequests = $user
-            ->leaveRequests()
+        $recentLeaveRequests = LeaveRequest::query()
+            ->with([
+                'permissionType',
+                'kabidReviewer',
+                'approver',
+            ])
+            ->where(
+                'user_id',
+                $user->id
+            )
             ->latest()
             ->limit(5)
             ->get();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | View
-        |--------------------------------------------------------------------------
-        */
 
         return view(
             'karyawan.dashboard',
             compact(
                 'user',
                 'year',
-                'balance',
-                'remainingLeave',
-                'pendingCount',
-                'approvedCount',
-                'rejectedCount',
+                'waitingKabidCount',
+                'waitingAdminCount',
+                'approvedLeaveCount',
+                'rejectedLeaveCount',
+                'leaveBalance',
+                'pendingAnnualDays',
+                'availableAnnualLeave',
+                'pendingReimbursementCount',
+                'paidReimbursementTotal',
                 'recentLeaveRequests'
             )
         );

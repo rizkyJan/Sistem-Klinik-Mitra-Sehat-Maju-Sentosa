@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LeaveRequest extends Model
 {
+    public const KABID_STATUS_PENDING = 'pending';
+    public const KABID_STATUS_APPROVED = 'approved';
+    public const KABID_STATUS_REJECTED = 'rejected';
+    public const KABID_STATUS_NOT_REQUIRED = 'not_required';
+
     protected $fillable = [
 
         /*
@@ -96,6 +101,17 @@ class LeaveRequest extends Model
 
         'status',
 
+        /*
+         * Approval tahap Kabid.
+         */
+        'kabid_status',
+        'kabid_reviewed_by',
+        'kabid_reviewed_at',
+        'kabid_rejection_reason',
+
+        /*
+         * Approval final Admin.
+         */
         'approved_by',
         'approved_at',
 
@@ -131,6 +147,8 @@ class LeaveRequest extends Model
             'annual_leave_deducted_days' => 'integer',
 
             'has_substitute' => 'boolean',
+
+            'kabid_reviewed_at' => 'datetime',
 
             'approved_at' => 'datetime',
 
@@ -208,7 +226,22 @@ class LeaveRequest extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | Approver
+    | Reviewer Kabid
+    |--------------------------------------------------------------------------
+    */
+
+    public function kabidReviewer(): BelongsTo
+    {
+        return $this->belongsTo(
+            User::class,
+            'kabid_reviewed_by'
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Approver Final / Admin
     |--------------------------------------------------------------------------
     */
 

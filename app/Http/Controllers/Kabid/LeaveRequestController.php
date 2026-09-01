@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Karyawan;
+namespace App\Http\Controllers\Kabid;
 
 use App\Http\Controllers\Controller;
 use App\Models\LeaveBalance;
@@ -21,7 +21,7 @@ class LeaveRequestController extends Controller
 {
     public function index(Request $request): View
     {
-        $this->ensureKaryawan();
+        $this->ensureKabid();
 
         $year = (int) $request->input('year', now()->year);
 
@@ -29,15 +29,6 @@ class LeaveRequestController extends Controller
             ->with([
                 'permissionType',
                 'substituteSchedules.workShift',
-
-                /*
-                 * Reviewer tahap 1.
-                 */
-                'kabidReviewer',
-
-                /*
-                 * Reviewer keputusan final Admin.
-                 */
                 'approver',
             ])
             ->where('user_id', Auth::id())
@@ -62,11 +53,11 @@ class LeaveRequestController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Statistik Workflow Tahun Terpilih
+        | Statistik Status Cuti Kabid
         |--------------------------------------------------------------------------
         |
-        | Status final tetap memakai kolom `status`.
-        | Tahap Kabid dibaca dari `kabid_status`.
+        | Cuti milik Kabid tidak melalui approval Kabid.
+        | Seluruh pengajuan Kabid langsung menunggu keputusan final Admin.
         |
         */
         $yearQuery = LeaveRequest::query()
@@ -79,30 +70,11 @@ class LeaveRequestController extends Controller
                 $year
             );
 
-        $waitingKabidCount =
-            (clone $yearQuery)
-            ->where(
-                'status',
-                'pending'
-            )
-            ->where(
-                'kabid_status',
-                LeaveRequest::KABID_STATUS_PENDING
-            )
-            ->count();
-
         $waitingAdminCount =
             (clone $yearQuery)
             ->where(
                 'status',
                 'pending'
-            )
-            ->whereIn(
-                'kabid_status',
-                [
-                    LeaveRequest::KABID_STATUS_APPROVED,
-                    LeaveRequest::KABID_STATUS_NOT_REQUIRED,
-                ]
             )
             ->count();
 
@@ -123,12 +95,11 @@ class LeaveRequestController extends Controller
             ->count();
 
         return view(
-            'karyawan.leave-requests.index',
+            'kabid.leave-requests.index',
             compact(
                 'leaveRequests',
                 'year',
                 'years',
-                'waitingKabidCount',
                 'waitingAdminCount',
                 'approvedCount',
                 'rejectedCount'
@@ -138,7 +109,7 @@ class LeaveRequestController extends Controller
 
     public function create(): View
     {
-        $this->ensureKaryawan();
+        $this->ensureKabid();
 
         /** @var User $user */
         $user = Auth::user();
@@ -204,7 +175,7 @@ class LeaveRequestController extends Controller
             ->get();
 
         return view(
-            'karyawan.leave-requests.create',
+            'kabid.leave-requests.create',
             compact(
                 'user',
                 'balance',
@@ -220,7 +191,7 @@ class LeaveRequestController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $this->ensureKaryawan();
+        $this->ensureKabid();
 
         $validated = $request->validate([
             'permission_type_id' => [
@@ -715,12 +686,12 @@ class LeaveRequestController extends Controller
                     ...$substituteData,
 
                     /*
-                     * Pengajuan Karyawan harus melalui Kabid.
-                     * Status final tetap pending sampai Admin memproses.
+                     * Cuti milik Kabid sendiri langsung menunggu Admin.
+                     * Kabid tidak boleh meng-ACC cutinya sendiri.
                      */
                     'status' => 'pending',
                     'kabid_status' =>
-                    LeaveRequest::KABID_STATUS_PENDING,
+                    LeaveRequest::KABID_STATUS_NOT_REQUIRED,
                 ]);
 
                 foreach ($substituteSchedules as $schedule) {
@@ -732,10 +703,10 @@ class LeaveRequestController extends Controller
         );
 
         return redirect()
-            ->route('karyawan.leave-requests.index')
+            ->route('kabid.leave-requests.index')
             ->with(
                 'success',
-                'Pengajuan perizinan berhasil dikirim dan sedang menunggu persetujuan Kabid.'
+                'Pengajuan perizinan berhasil dikirim dan sedang menunggu keputusan Administrator.'
             );
     }
 
@@ -1259,14 +1230,14 @@ class LeaveRequestController extends Controller
         return $total;
     }
 
-    private function ensureKaryawan(): void
+    private function ensureKabid(): void
     {
         /** @var User|null $user */
         $user = Auth::user();
 
         abort_unless(
             $user !== null
-                && $user->role === 'karyawan',
+                && $user->role === 'kabid',
             403
         );
     }

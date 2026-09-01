@@ -234,6 +234,48 @@
                 @endif
 
 
+                {{-- Kabid --}}
+                <a
+                    href="{{ route('admin.kabid.index') }}"
+                    onclick="closeAdminSidebar()"
+                    class="
+                        flex items-center gap-3
+                        rounded-lg px-3 py-2.5
+                        text-sm font-medium transition
+                        {{ request()->routeIs('admin.kabid.*')
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}
+                    ">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor">
+
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.5"
+                            d="M12 3l7 3v5c0 5-3 8.5-7 10-4-1.5-7-5-7-10V6l7-3z" />
+
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.5"
+                            d="M8.5 13.5c.8-1.5 2-2.5 3.5-2.5s2.7 1 3.5 2.5M12 8.5h.01" />
+                    </svg>
+
+                    <span class="truncate">
+                        Kabid
+                    </span>
+
+                    <x-sidebar-notification-badge
+                        :count="$pendingKabidVerificationCount ?? 0" />
+                </a>
+
+
                 {{-- Karyawan --}}
                 <a
                     href="{{ route('admin.karyawan.index') }}"

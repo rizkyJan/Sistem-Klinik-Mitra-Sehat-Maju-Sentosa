@@ -5,27 +5,28 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
-use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
 use Throwable;
-use Laravel\Socialite\Two\GoogleProvider;
 
 class GoogleAuthController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Redirect ke Google
-    |--------------------------------------------------------------------------
-    */
-    public function redirect(): SymfonyRedirectResponse
+    /**
+     * Arahkan user ke halaman login Google.
+     */
+    public function redirect()
     {
-        /** @var GoogleProvider $provider */
-        $provider = Socialite::driver('google');
-
-        return $provider
+        return Socialite::driver('google')
+            /*
+             * Paksa Google menampilkan pemilih akun setiap kali
+             * tombol Login dengan Google ditekan.
+             *
+             * Ini tidak memaksa consent ulang. Pengguna hanya diminta
+             * memilih akun Google yang ingin digunakan.
+             */
             ->with([
                 'prompt' => 'select_account',
             ])
@@ -33,264 +34,257 @@ class GoogleAuthController extends Controller
     }
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Callback Google
-    |--------------------------------------------------------------------------
-    */
-    public function callback(): RedirectResponse
-    {
+    /**
+     * Callback dari Google.
+     */
+    public function callback(
+        Request $request
+    ): RedirectResponse {
+
         try {
-            $googleUser = Socialite::driver('google')->user();
-        } catch (Throwable $e) {
-            report($e);
 
-            return redirect()
-                ->route('login')
-                ->withErrors([
-                    'google' =>
-                    'Login Google gagal. Silakan coba lagi.',
-                ]);
-        }
+            $googleUser =
+                Socialite::driver('google')
+                ->user();
 
-
-        $email = strtolower(
-            (string) $googleUser->getEmail()
-        );
-
-
-        if ($email === '') {
-            return redirect()
-                ->route('login')
-                ->withErrors([
-                    'google' =>
-                    'Akun Google tidak memberikan alamat email.',
-                ]);
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Cari akun berdasarkan Google ID
-        |--------------------------------------------------------------------------
-        */
-        $user = User::query()
-            ->where(
-                'google_id',
-                $googleUser->getId()
-            )
-            ->first();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Jika belum terhubung Google, cari berdasarkan email
-        |--------------------------------------------------------------------------
-        |
-        | Contoh:
-        | admin@mitrasehat.com sebelumnya dibuat dengan email/password.
-        | Saat login Google menggunakan email yang sama,
-        | akun tersebut akan dihubungkan ke Google.
-        |--------------------------------------------------------------------------
-        */
-        if (! $user) {
+            /*
+             * Cari berdasarkan google_id terlebih dahulu.
+             * Jika belum pernah terhubung, cari berdasarkan email.
+             */
             $user = User::query()
-                ->whereRaw(
-                    'LOWER(email) = ?',
-                    [$email]
+                ->where(
+                    'google_id',
+                    $googleUser->getId()
+                )
+                ->orWhere(
+                    'email',
+                    $googleUser->getEmail()
                 )
                 ->first();
-        }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Cegah email terhubung ke Google ID berbeda
-        |--------------------------------------------------------------------------
-        */
-        if (
-            $user
-            &&
-            $user->google_id
-            &&
-            $user->google_id !== $googleUser->getId()
-        ) {
-            return redirect()
-                ->route('login')
-                ->withErrors([
-                    'google' =>
-                    'Email ini sudah terhubung dengan akun Google lain. Hubungi admin.',
-                ]);
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | AKUN BARU DARI GOOGLE
-        |--------------------------------------------------------------------------
-        |
-        | User baru SELALU dibuat sebagai Karyawan.
-        | Login Google tidak boleh otomatis membuat seseorang menjadi Admin.
-        |--------------------------------------------------------------------------
-        */
-        if (! $user) {
-
-            $user = User::create([
-                'name' =>
-                $googleUser->getName() ?: $email,
-
-                'email' =>
-                $email,
-
-                /*
-                 * Password acak karena akun baru masuk lewat Google.
-                 */
-                'password' =>
-                Hash::make(
-                    Str::random(64)
-                ),
-
-                'role' =>
-                'karyawan',
-
-                /*
-                 * Karyawan baru harus mengisi data dan menunggu ACC.
-                 */
-                'is_active' =>
-                false,
-
-                'google_id' =>
-                $googleUser->getId(),
-
-                'google_avatar' =>
-                $googleUser->getAvatar(),
-
-                'approval_status' =>
-                'pending',
-
-                'email_verified_at' =>
-                now(),
-            ]);
-        } else {
 
             /*
             |--------------------------------------------------------------------------
-            | AKUN SUDAH ADA
+            | USER BARU DARI GOOGLE
             |--------------------------------------------------------------------------
             |
-            | Bisa Admin, Kabid, atau Karyawan.
-            | Hubungkan akun tersebut dengan Google.
+            | Role sementara dibuat "karyawan" karena kolom role tidak nullable.
+            | Role final Karyawan / Kabid baru dipilih di halaman
+            | "Lengkapi Data Pegawai".
+            |
+            */
+            if (! $user) {
+
+                $user = User::create([
+                    'name' =>
+                    $googleUser->getName()
+                        ?: $googleUser->getNickname()
+                        ?: 'Pengguna Google',
+
+                    'email' =>
+                    $googleUser->getEmail(),
+
+                    'google_id' =>
+                    $googleUser->getId(),
+
+                    'google_avatar' =>
+                    $googleUser->getAvatar(),
+
+                    'password' =>
+                    Hash::make(
+                        Str::random(40)
+                    ),
+
+                    /*
+                     * Role sementara.
+                     * Akan diganti sesuai pilihan user saat onboarding.
+                     */
+                    'role' =>
+                    'karyawan',
+
+                    /*
+                     * Semua pendaftar Google wajib diverifikasi Admin.
+                     */
+                    'approval_status' =>
+                    'pending',
+
+                    'approval_rejection_reason' =>
+                    null,
+
+                    'is_active' =>
+                    false,
+
+                    'profile_completed_at' =>
+                    null,
+                ]);
+            } else {
+
+                /*
+                 * Hubungkan akun lama dengan Google jika email sama,
+                 * sekaligus perbarui avatar.
+                 */
+                $user->forceFill([
+                    'google_id' =>
+                    $user->google_id
+                        ?: $googleUser->getId(),
+
+                    'google_avatar' =>
+                    $googleUser->getAvatar()
+                        ?: $user->google_avatar,
+                ])->save();
+            }
+
+
+            Auth::login(
+                $user,
+                true
+            );
+
+            $request->session()
+                ->regenerate();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ADMIN
             |--------------------------------------------------------------------------
             */
-            $user->forceFill([
-                'google_id' =>
-                $googleUser->getId(),
+            if ($user->role === 'admin') {
 
-                'google_avatar' =>
-                $googleUser->getAvatar(),
+                if (! $user->is_active) {
 
-                'email_verified_at' =>
-                $user->email_verified_at ?: now(),
-            ])->save();
-        }
+                    return $this->logoutWithError(
+                        $request,
+                        'Akun Admin sedang nonaktif.'
+                    );
+                }
+
+                return redirect()
+                    ->route(
+                        'admin.dashboard'
+                    );
+            }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | ADMIN / KABID NONAKTIF
-        |--------------------------------------------------------------------------
-        |
-        | Karyawan pending memang is_active=false dan tetap harus dapat masuk
-        | untuk melihat halaman menunggu verifikasi.
-        | Karena itu pengecekan nonaktif ini hanya untuk Admin/Kabid.
-        |--------------------------------------------------------------------------
-        */
-        if (
-            in_array(
-                $user->role,
-                ['admin', 'kabid'],
-                true
-            )
-            &&
-            ! $user->is_active
-        ) {
+            /*
+            |--------------------------------------------------------------------------
+            | PROFIL PEGAWAI BELUM LENGKAP
+            |--------------------------------------------------------------------------
+            |
+            | Berlaku untuk pendaftar Google Karyawan maupun Kabid.
+            |
+            */
+            if (! $user->profile_completed_at) {
+
+                return redirect()
+                    ->route(
+                        'employee.profile.complete'
+                    );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | BELUM DISETUJUI ADMIN
+            |--------------------------------------------------------------------------
+            |
+            | Kabid pending tidak dianggap sebagai Admin/nonaktif.
+            | Ia tetap diarahkan ke halaman menunggu verifikasi.
+            |
+            */
+            if (
+                $user->approval_status !== 'approved'
+            ) {
+
+                return redirect()
+                    ->route(
+                        'employee.approval.waiting'
+                    );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUDAH APPROVED TAPI DINONAKTIFKAN
+            |--------------------------------------------------------------------------
+            */
+            if (! $user->is_active) {
+
+                return $this->logoutWithError(
+                    $request,
+                    'Akun Anda sedang nonaktif. Silakan hubungi Administrator.'
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | REDIRECT BERDASARKAN JABATAN
+            |--------------------------------------------------------------------------
+            */
+            if ($user->role === 'kabid') {
+
+                return redirect()
+                    ->route(
+                        'kabid.dashboard'
+                    );
+            }
+
+
+            if ($user->role === 'karyawan') {
+
+                return redirect()
+                    ->route(
+                        'karyawan.dashboard'
+                    );
+            }
+
+
+            /*
+             * Pengaman jika role di database tidak dikenali.
+             */
+            return $this->logoutWithError(
+                $request,
+                'Role akun tidak dikenali. Silakan hubungi Administrator.'
+            );
+        } catch (Throwable $exception) {
+
+            report(
+                $exception
+            );
+
             return redirect()
                 ->route('login')
                 ->withErrors([
-                    'google' =>
-                    'Akun Anda sedang nonaktif. Hubungi administrator.',
+                    'email' =>
+                    'Login Google gagal. Silakan coba kembali.',
                 ]);
         }
+    }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Login
-        |--------------------------------------------------------------------------
-        */
-        Auth::login(
-            $user,
-            true
-        );
+    /**
+     * Logout user lalu kembali ke halaman login dengan pesan error.
+     */
+    private function logoutWithError(
+        Request $request,
+        string $message
+    ): RedirectResponse {
 
-        request()
-            ->session()
-            ->regenerate();
+        Auth::guard('web')
+            ->logout();
 
+        $request->session()
+            ->invalidate();
 
-        /*
-        |--------------------------------------------------------------------------
-        | ADMIN / KABID
-        |--------------------------------------------------------------------------
-        */
-        if (
-            in_array(
-                $user->role,
-                ['admin', 'kabid'],
-                true
-            )
-        ) {
-            return redirect()
-                ->route('admin.dashboard');
-        }
+        $request->session()
+            ->regenerateToken();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | KARYAWAN - BELUM LENGKAP DATA
-        |--------------------------------------------------------------------------
-        */
-        if (! $user->profile_completed_at) {
-            return redirect()
-                ->route(
-                    'employee.profile.complete'
-                );
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | KARYAWAN - BELUM DISETUJUI
-        |--------------------------------------------------------------------------
-        */
-        if (
-            $user->approval_status !== 'approved'
-            ||
-            ! $user->is_active
-        ) {
-            return redirect()
-                ->route(
-                    'employee.approval.waiting'
-                );
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | KARYAWAN - SUDAH AKTIF
-        |--------------------------------------------------------------------------
-        */
         return redirect()
-            ->route('karyawan.dashboard');
+            ->route('login')
+            ->withErrors([
+                'email' =>
+                $message,
+            ]);
     }
 }

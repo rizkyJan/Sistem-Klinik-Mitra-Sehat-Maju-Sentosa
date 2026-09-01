@@ -29,7 +29,7 @@ class LeaveBalanceController extends Controller
         $eligibilityCutoff = $this->getEligibilityCutoff($year);
 
         $allActiveEmployees = User::query()
-            ->where('role', 'karyawan')
+            ->whereIn('role', ['karyawan', 'kabid'])
             ->where('is_active', true)
             ->with([
                 'department',
@@ -111,7 +111,7 @@ class LeaveBalanceController extends Controller
         }
 
         $oldestJoinDate = User::query()
-            ->where('role', 'karyawan')
+            ->whereIn('role', ['karyawan', 'kabid'])
             ->whereNotNull('join_date')
             ->min('join_date');
 
@@ -172,7 +172,7 @@ class LeaveBalanceController extends Controller
         $eligibilityCutoff = $this->getEligibilityCutoff($year);
 
         $employees = User::query()
-            ->where('role', 'karyawan')
+            ->whereIn('role', ['karyawan', 'kabid'])
             ->where('is_active', true)
             ->whereNotNull('join_date')
             ->orderBy('name')
@@ -214,7 +214,7 @@ class LeaveBalanceController extends Controller
                 )
                 ->with(
                     'success',
-                    'Tidak ada jatah cuti baru yang perlu dibuat. Semua karyawan yang sudah berhak telah memiliki jatah.'
+                    'Tidak ada jatah cuti baru yang perlu dibuat. Semua pegawai yang sudah berhak telah memiliki jatah.'
                 );
         }
 
@@ -225,7 +225,7 @@ class LeaveBalanceController extends Controller
             )
             ->with(
                 'success',
-                "{$generated} karyawan berhasil diberikan jatah cuti {$year} sebanyak 9 hari."
+                "{$generated} pegawai berhasil diberikan jatah cuti {$year} sebanyak 9 hari."
             );
     }
 
@@ -323,12 +323,7 @@ class LeaveBalanceController extends Controller
         $user = Auth::user();
 
         abort_unless(
-            $user
-                && in_array(
-                    $user->role,
-                    ['admin', 'kabid'],
-                    true
-                ),
+            $user && $user->role === 'admin',
             403
         );
     }

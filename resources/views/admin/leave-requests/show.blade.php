@@ -146,14 +146,32 @@
                     === 'pending'
                     )
 
+                    @if(
+                    $leaveRequest->user?->role === 'karyawan'
+                    &&
+                    $leaveRequest->kabid_status
+                    === \App\Models\LeaveRequest::KABID_STATUS_PENDING
+                    )
+
                     <span
                         class="inline-flex rounded-full
-                                   bg-amber-50
-                                   px-3 py-1.5
-                                   text-sm font-medium
-                                   text-amber-700">
-                        Menunggu Persetujuan
+                                       bg-amber-50 px-3 py-1.5
+                                       text-sm font-medium
+                                       text-amber-700">
+                        Menunggu Persetujuan Kabid
                     </span>
+
+                    @else
+
+                    <span
+                        class="inline-flex rounded-full
+                                       bg-blue-50 px-3 py-1.5
+                                       text-sm font-medium
+                                       text-blue-700">
+                        Menunggu Keputusan Admin
+                    </span>
+
+                    @endif
 
 
                     @elseif(
@@ -832,7 +850,7 @@
 
 
                 {{-- ====================================================
-                    KONFIRMASI PENGGANTI MANDIRI
+                    KONFIRMASI PENGGANTI MANDIRI - IZIN SAKIT
                 ==================================================== --}}
                 @if($leaveRequest->self_replacement_days > 0)
 
@@ -1292,7 +1310,7 @@
 
             <div class="rounded-xl border border-amber-200 bg-amber-50 p-5">
                 <p class="text-sm font-semibold text-amber-900">
-                    Pengganti & Biaya Mandiri
+                    Pengganti Mandiri untuk Izin Sakit
                 </p>
 
                 <p class="mt-2 text-sm leading-relaxed text-amber-800">
@@ -1305,10 +1323,15 @@
                 </p>
             </div>
 
-            @endif
+            @elseif(! $leaveRequest->has_substitute)
 
+            <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
+                <p class="text-sm font-medium text-slate-600">
+                    Pengajuan ini tidak menggunakan pengganti yang dicatat di sistem.
+                </p>
+            </div>
 
-            @if($leaveRequest->substituteSchedules->isNotEmpty())
+            @elseif($leaveRequest->substituteSchedules->isNotEmpty())
 
             <div class="mb-5 grid gap-4 sm:grid-cols-2">
                 <div class="rounded-xl bg-blue-50 p-4">
@@ -1351,7 +1374,7 @@
                                 </th>
 
                                 <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                    Biaya Pengganti
+                                    Rekening
                                 </th>
 
                                 <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -1373,16 +1396,21 @@
                             ?? $leaveRequest->substitute_whatsapp
                             ?? '-';
 
-                            $scheduleFeePayer = $schedule->substitute_fee_payer;
+                            $scheduleAddress = $schedule->substitute_address
+                            ?? $leaveRequest->substitute_address
+                            ?? '-';
 
                             $scheduleBank = $schedule->substitute_bank_name
-                            ?? $leaveRequest->substitute_bank_name;
+                            ?? $leaveRequest->substitute_bank_name
+                            ?? '-';
 
                             $scheduleAccount = $schedule->substitute_bank_account_number
-                            ?? $leaveRequest->substitute_bank_account_number;
+                            ?? $leaveRequest->substitute_bank_account_number
+                            ?? '-';
 
                             $scheduleHolder = $schedule->substitute_bank_account_holder
-                            ?? $leaveRequest->substitute_bank_account_holder;
+                            ?? $leaveRequest->substitute_bank_account_holder
+                            ?? '-';
                             @endphp
 
                             <tr class="align-top">
@@ -1401,6 +1429,10 @@
                                     <p class="font-semibold text-slate-800">
                                         {{ $scheduleName }}
                                     </p>
+
+                                    <p class="mt-1 text-xs leading-relaxed text-slate-500">
+                                        {{ $scheduleAddress }}
+                                    </p>
                                 </td>
 
 
@@ -1411,48 +1443,18 @@
                                 </td>
 
 
-                                <td class="min-w-[230px] px-5 py-4">
-                                    @if($scheduleFeePayer === 'company')
-                                    <span class="inline-flex rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-                                        Perusahaan
-                                    </span>
-
-                                    <p class="mt-2 text-sm font-semibold text-slate-800">
-                                        {{ $scheduleBank ?? '-' }}
+                                <td class="min-w-[210px] px-5 py-4">
+                                    <p class="text-sm font-semibold text-slate-800">
+                                        {{ $scheduleBank }}
                                     </p>
 
                                     <p class="mt-1 text-xs text-slate-500">
-                                        {{ $scheduleAccount ?? '-' }}
+                                        {{ $scheduleAccount }}
                                     </p>
 
                                     <p class="mt-1 text-xs text-slate-400">
-                                        a.n. {{ $scheduleHolder ?? '-' }}
+                                        a.n. {{ $scheduleHolder }}
                                     </p>
-                                    @elseif($scheduleFeePayer === 'employee')
-                                    <span class="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
-                                        Saya / Pemohon
-                                    </span>
-
-                                    <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                                        Biaya pengganti ditanggung dan diselesaikan oleh karyawan yang mengajukan izin.
-                                    </p>
-                                    @else
-                                    <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                                        Data Lama
-                                    </span>
-
-                                    <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                                        Penanggung biaya belum tercatat pada pengajuan lama.
-                                    </p>
-
-                                    @if($scheduleBank || $scheduleAccount || $scheduleHolder)
-                                    <p class="mt-2 text-xs text-slate-500">
-                                        {{ $scheduleBank ?? '-' }}
-                                        • {{ $scheduleAccount ?? '-' }}
-                                        • a.n. {{ $scheduleHolder ?? '-' }}
-                                    </p>
-                                    @endif
-                                    @endif
                                 </td>
 
 
@@ -1497,7 +1499,7 @@
                 </div>
             </div>
 
-            @elseif($leaveRequest->has_substitute)
+            @else
 
             {{-- Data lama: masih memakai kolom pengganti global. --}}
             <div class="rounded-xl border border-amber-200 bg-amber-50 p-5">
@@ -1539,14 +1541,6 @@
                         </p>
                     </div>
                 </div>
-            </div>
-
-            @elseif($leaveRequest->self_replacement_days === 0)
-
-            <div class="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
-                <p class="text-sm font-medium text-slate-600">
-                    Pengajuan ini tidak menggunakan pengganti yang dicatat di sistem.
-                </p>
             </div>
 
             @endif
@@ -1700,6 +1694,347 @@
 
 
     {{-- ============================================================
+        HASIL REVIEW KABID
+    ============================================================ --}}
+    @if(
+    $leaveRequest->user?->role === 'karyawan'
+    &&
+    in_array(
+    $leaveRequest->kabid_status,
+    [
+    \App\Models\LeaveRequest::KABID_STATUS_APPROVED,
+    \App\Models\LeaveRequest::KABID_STATUS_REJECTED,
+    ],
+    true
+    )
+    )
+
+    <div
+        class="
+                rounded-xl border p-5 shadow-sm
+                {{
+                    $leaveRequest->kabid_status
+                        === \App\Models\LeaveRequest::KABID_STATUS_APPROVED
+                        ? 'border-emerald-200 bg-emerald-50'
+                        : 'border-red-200 bg-red-50'
+                }}
+            ">
+
+        <div
+            class="flex flex-col gap-4
+                       sm:flex-row sm:items-start sm:justify-between">
+
+            <div>
+
+                <p
+                    class="
+                            text-xs font-semibold uppercase tracking-wider
+                            {{
+                                $leaveRequest->kabid_status
+                                    === \App\Models\LeaveRequest::KABID_STATUS_APPROVED
+                                    ? 'text-emerald-600'
+                                    : 'text-red-600'
+                            }}
+                        ">
+                    Hasil Pemeriksaan Tahap Kabid
+                </p>
+
+                <p
+                    class="
+                            mt-1 text-lg font-semibold
+                            {{
+                                $leaveRequest->kabid_status
+                                    === \App\Models\LeaveRequest::KABID_STATUS_APPROVED
+                                    ? 'text-emerald-800'
+                                    : 'text-red-800'
+                            }}
+                        ">
+
+                    {{
+                            $leaveRequest->kabid_status
+                                === \App\Models\LeaveRequest::KABID_STATUS_APPROVED
+                                ? '✓ Disetujui Kabid'
+                                : '✕ Ditolak Kabid'
+                        }}
+
+                </p>
+
+                @if(
+                $leaveRequest->kabid_status
+                === \App\Models\LeaveRequest::KABID_STATUS_APPROVED
+                )
+
+                <p class="mt-1 text-sm text-emerald-700">
+                    Pengajuan telah lolos tahap Kabid dan dapat diproses final oleh Admin.
+                </p>
+
+                @else
+
+                <p class="mt-1 text-sm text-red-700">
+                    Pengajuan tidak dilanjutkan ke tahap Admin.
+                </p>
+
+                @endif
+            </div>
+
+
+            <div
+                class="rounded-lg bg-white/70
+                           px-4 py-3 text-sm">
+
+                <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Diproses Oleh
+                </p>
+
+                <p class="mt-1 font-semibold text-slate-800">
+                    {{ $leaveRequest->kabidReviewer?->name ?? 'Kabid' }}
+                </p>
+
+                <p class="mt-1 text-xs text-slate-500">
+                    {{ $leaveRequest->kabidReviewer?->department?->name
+                            ?? $leaveRequest->user?->department?->name
+                            ?? '-'
+                        }}
+                </p>
+
+                @if($leaveRequest->kabid_reviewed_at)
+                <p class="mt-1 text-xs text-slate-500">
+                    {{ $leaveRequest->kabid_reviewed_at->format('d/m/Y H:i') }}
+                </p>
+                @endif
+            </div>
+        </div>
+
+
+        @if(
+        $leaveRequest->kabid_status
+        === \App\Models\LeaveRequest::KABID_STATUS_REJECTED
+        &&
+        $leaveRequest->kabid_rejection_reason
+        )
+
+        <div
+            class="mt-4 rounded-lg border border-red-200
+                           bg-white/70 px-4 py-3">
+
+            <p class="text-xs font-semibold uppercase tracking-wide text-red-500">
+                Alasan Penolakan Kabid
+            </p>
+
+            <p class="mt-1 whitespace-pre-line text-sm leading-6 text-red-700">
+                {{ $leaveRequest->kabid_rejection_reason }}
+            </p>
+        </div>
+
+        @endif
+    </div>
+
+    @endif
+
+
+    @php
+    /*
+    * UI hanya membantu Admin memahami posisi workflow.
+    * Proteksi utama tetap berada di Admin\LeaveRequestController.
+    */
+    $isKaryawanRequest =
+    $leaveRequest->user?->role === 'karyawan';
+
+    $waitingForKabid =
+    $isKaryawanRequest
+    && $leaveRequest->kabid_status
+    === \App\Models\LeaveRequest::KABID_STATUS_PENDING;
+
+    $approvedByKabid =
+    ! $isKaryawanRequest
+    || in_array(
+    $leaveRequest->kabid_status,
+    [
+    \App\Models\LeaveRequest::KABID_STATUS_APPROVED,
+    \App\Models\LeaveRequest::KABID_STATUS_NOT_REQUIRED,
+    ],
+    true
+    );
+
+    $rejectedByKabid =
+    $isKaryawanRequest
+    && $leaveRequest->kabid_status
+    === \App\Models\LeaveRequest::KABID_STATUS_REJECTED;
+
+    /*
+    * Admin hanya boleh berinteraksi jika tahap Kabid sudah selesai
+    * atau memang tidak diperlukan.
+    */
+    $adminStageLocked =
+    ! $approvedByKabid;
+    @endphp
+
+
+    {{-- ============================================================
+        WORKFLOW APPROVAL
+    ============================================================ --}}
+    @if(
+    $leaveRequest->status === 'pending'
+    && $isKaryawanRequest
+    )
+
+    <div
+        class="rounded-xl border border-slate-200
+                   bg-white p-5 shadow-sm">
+
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+            <div>
+
+                <p
+                    class="text-xs font-semibold uppercase
+                               tracking-wider text-slate-400">
+                    Alur Persetujuan
+                </p>
+
+                <h2 class="mt-1 font-semibold text-slate-800">
+                    Kabid → Admin
+                </h2>
+
+                <p class="mt-1 text-sm leading-6 text-slate-500">
+
+                    @if($waitingForKabid)
+
+                    Pengajuan masih berada pada tahap Kabid.
+                    Admin dapat melihat detail, tetapi belum dapat
+                    menyetujui atau menolak.
+
+                    @elseif($rejectedByKabid)
+
+                    Pengajuan telah ditolak oleh Kabid sehingga
+                    tidak dapat diproses lebih lanjut oleh Admin.
+
+                    @else
+
+                    Persetujuan Kabid sudah selesai.
+                    Pengajuan siap diproses final oleh Admin.
+
+                    @endif
+
+                </p>
+            </div>
+
+
+            <div
+                class="grid min-w-full grid-cols-2 gap-2
+                           sm:min-w-[360px]">
+
+                {{-- TAHAP KABID --}}
+                <div
+                    class="
+                            rounded-xl border p-3
+                            {{
+                                $waitingForKabid
+                                    ? 'border-amber-200 bg-amber-50'
+                                    : (
+                                        $rejectedByKabid
+                                            ? 'border-red-200 bg-red-50'
+                                            : 'border-emerald-200 bg-emerald-50'
+                                    )
+                            }}
+                        ">
+
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Tahap 1
+                    </p>
+
+                    <p
+                        class="
+                                mt-1 text-sm font-semibold
+                                {{
+                                    $waitingForKabid
+                                        ? 'text-amber-700'
+                                        : (
+                                            $rejectedByKabid
+                                                ? 'text-red-700'
+                                                : 'text-emerald-700'
+                                        )
+                                }}
+                            ">
+                        Kabid
+                    </p>
+
+                    <p
+                        class="
+                                mt-0.5 text-xs
+                                {{
+                                    $waitingForKabid
+                                        ? 'text-amber-600'
+                                        : (
+                                            $rejectedByKabid
+                                                ? 'text-red-600'
+                                                : 'text-emerald-600'
+                                        )
+                                }}
+                            ">
+
+                        @if($waitingForKabid)
+                        ● Menunggu
+                        @elseif($rejectedByKabid)
+                        ✕ Ditolak
+                        @else
+                        ✓ Disetujui
+                        @endif
+
+                    </p>
+                </div>
+
+
+                {{-- TAHAP ADMIN --}}
+                <div
+                    class="
+                            rounded-xl border p-3
+                            {{
+                                $adminStageLocked
+                                    ? 'border-slate-200 bg-slate-100'
+                                    : 'border-blue-200 bg-blue-50'
+                            }}
+                        ">
+
+                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Tahap 2
+                    </p>
+
+                    <p
+                        class="
+                                mt-1 text-sm font-semibold
+                                {{
+                                    $adminStageLocked
+                                        ? 'text-slate-500'
+                                        : 'text-blue-700'
+                                }}
+                            ">
+                        Admin
+                    </p>
+
+                    <p
+                        class="
+                                mt-0.5 text-xs
+                                {{
+                                    $adminStageLocked
+                                        ? 'text-slate-400'
+                                        : 'text-blue-600'
+                                }}
+                            ">
+                        {{ $adminStageLocked
+                                ? '🔒 Belum tersedia'
+                                : '● Siap diproses'
+                            }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @endif
+
+
+    {{-- ============================================================
         ACTION APPROVE / REJECT
     ============================================================ --}}
     @if(
@@ -1716,15 +2051,28 @@
 
             <h2
                 class="font-semibold
-                           text-slate-800">
-                Proses Pengajuan
+                       {{ $adminStageLocked
+                            ? 'text-slate-500'
+                            : 'text-slate-800'
+                       }}">
+                Proses Pengajuan Admin
             </h2>
 
             <p
                 class="mt-1 text-sm
-                           text-slate-500">
-                Periksa seluruh data sebelum
-                menyetujui atau menolak pengajuan.
+                       {{ $adminStageLocked
+                            ? 'text-slate-400'
+                            : 'text-slate-500'
+                       }}">
+
+                @if($waitingForKabid)
+                Panel Admin dikunci sampai Kabid menyetujui pengajuan.
+                @elseif($rejectedByKabid)
+                Pengajuan telah ditolak Kabid dan tidak dapat diproses Admin.
+                @else
+                Periksa seluruh data sebelum menyetujui atau menolak pengajuan.
+                @endif
+
             </p>
 
         </div>
@@ -1943,20 +2291,42 @@
 
             {{-- APPROVE --}}
             <div
-                class="rounded-xl
-                           border border-emerald-200
-                           bg-emerald-50 p-5">
+                class="
+                    rounded-xl border p-5
+                    {{
+                        $adminStageLocked
+                            ? 'border-slate-200 bg-slate-100'
+                            : 'border-emerald-200 bg-emerald-50'
+                    }}
+                ">
 
                 <h3
-                    class="font-semibold
-                               text-emerald-800">
+                    class="
+                        font-semibold
+                        {{
+                            $adminStageLocked
+                                ? 'text-slate-500'
+                                : 'text-emerald-800'
+                        }}
+                    ">
                     Setujui Pengajuan
                 </h3>
 
                 <p
-                    class="mt-1 text-sm
-                               text-emerald-700">
-                    Pengajuan akan ditandai sebagai disetujui.
+                    class="
+                        mt-1 text-sm
+                        {{
+                            $adminStageLocked
+                                ? 'text-slate-400'
+                                : 'text-emerald-700'
+                        }}
+                    ">
+
+                    {{ $adminStageLocked
+                        ? 'Menunggu persetujuan Kabid terlebih dahulu.'
+                        : 'Pengajuan akan ditandai sebagai disetujui.'
+                    }}
+
                 </p>
 
 
@@ -1978,6 +2348,8 @@
                         id="openApproveModal"
 
                         @disabled(
+                        $adminStageLocked
+                        ||
                         (
                         $leaveRequest->unpaid_days > 0
                         && ! $leaveRequest->salary_deduction_consent
@@ -2015,21 +2387,42 @@
 
             {{-- REJECT --}}
             <div
-                class="rounded-xl
-                           border border-red-200
-                           bg-red-50 p-5">
+                class="
+                    rounded-xl border p-5
+                    {{
+                        $adminStageLocked
+                            ? 'border-slate-200 bg-slate-100'
+                            : 'border-red-200 bg-red-50'
+                    }}
+                ">
 
                 <h3
-                    class="font-semibold
-                               text-red-800">
+                    class="
+                        font-semibold
+                        {{
+                            $adminStageLocked
+                                ? 'text-slate-500'
+                                : 'text-red-800'
+                        }}
+                    ">
                     Tolak Pengajuan
                 </h3>
 
                 <p
-                    class="mt-1 text-sm
-                               text-red-700">
-                    Tuliskan alasan jika pengajuan
-                    tidak dapat disetujui.
+                    class="
+                        mt-1 text-sm
+                        {{
+                            $adminStageLocked
+                                ? 'text-slate-400'
+                                : 'text-red-700'
+                        }}
+                    ">
+
+                    {{ $adminStageLocked
+                        ? 'Fitur ini aktif setelah tahap Kabid selesai.'
+                        : 'Tuliskan alasan jika pengajuan tidak dapat disetujui.'
+                    }}
+
                 </p>
 
 
@@ -2051,14 +2444,22 @@
                         name="rejection_reason"
                         rows="4"
                         required
+                        @disabled($adminStageLocked)
 
-                        placeholder="Tuliskan alasan penolakan..."
+                        placeholder="{{
+                            $adminStageLocked
+                                ? 'Menunggu persetujuan Kabid...'
+                                : 'Tuliskan alasan penolakan...'
+                        }}"
 
-                        class="w-full rounded-lg
-                                   border-red-200
-                                   bg-white text-sm
-                                   focus:border-red-500
-                                   focus:ring-red-500">{{ old('rejection_reason') }}</textarea>
+                        class="
+                            w-full rounded-lg text-sm
+                            {{
+                                $adminStageLocked
+                                    ? 'cursor-not-allowed border-slate-200 bg-slate-200 text-slate-400'
+                                    : 'border-red-200 bg-white focus:border-red-500 focus:ring-red-500'
+                            }}
+                        ">{{ old('rejection_reason') }}</textarea>
 
 
                     @error(
@@ -2077,19 +2478,17 @@
                     <button
                         type="button"
                         id="openRejectModal"
+                        @disabled($adminStageLocked)
 
-                        class="mt-3 w-full
-                                   rounded-lg
-                                   bg-red-600
-                                   px-4 py-3
-                                   text-sm font-medium
-                                   text-white
-                                   transition
-                                   hover:bg-red-700
-                                   focus:outline-none
-                                   focus:ring-2
-                                   focus:ring-red-500
-                                   focus:ring-offset-2">
+                        class="
+                            mt-3 w-full rounded-lg px-4 py-3
+                            text-sm font-medium transition
+                            {{
+                                $adminStageLocked
+                                    ? 'cursor-not-allowed bg-slate-300 text-slate-500'
+                                    : 'bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2'
+                            }}
+                        ">
                         Tolak Pengajuan
                     </button>
 
