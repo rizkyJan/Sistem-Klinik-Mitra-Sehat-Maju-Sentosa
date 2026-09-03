@@ -16,66 +16,168 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        return view(
+            'auth.login'
+        );
     }
 
     /**
      * Memproses login user.
      */
-    public function store(LoginRequest $request): RedirectResponse
-    {
+    public function store(
+        LoginRequest $request
+    ): RedirectResponse {
+
         $request->authenticate();
 
-        $request->session()->regenerate();
+        $request->session()
+            ->regenerate();
 
-        $user = $request->user();
+        $user =
+            $request->user();
+
+        /*
+        |--------------------------------------------------------------------------
+        | ADMIN
+        |--------------------------------------------------------------------------
+        */
+        if (
+            $user->role === 'admin'
+        ) {
+            if (
+                ! $user->is_active
+            ) {
+                return $this->logoutWithError(
+                    $request,
+                    'Akun Admin sedang nonaktif.'
+                );
+            }
+
+            return redirect()
+                ->route(
+                    'admin.dashboard'
+                );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | PROFIL BELUM LENGKAP
+        |--------------------------------------------------------------------------
+        |
+        | Umumnya terjadi pada akun baru dari Google.
+        |
+        */
+        if (
+            ! $user->profile_completed_at
+        ) {
+            return redirect()
+                ->route(
+                    'employee.profile.complete'
+                );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | MENUNGGU / DITOLAK ADMIN
+        |--------------------------------------------------------------------------
+        |
+        | Pendaftar manual maupun Google tidak boleh langsung masuk
+        | dashboard sebelum approval_status = approved.
+        |
+        */
+        if (
+            $user->approval_status !== 'approved'
+        ) {
+            return redirect()
+                ->route(
+                    'employee.approval.waiting'
+                );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SUDAH APPROVED TAPI DINONAKTIFKAN
+        |--------------------------------------------------------------------------
+        */
+        if (
+            ! $user->is_active
+        ) {
+            return $this->logoutWithError(
+                $request,
+                'Akun Anda sedang nonaktif. Silakan hubungi Administrator.'
+            );
+        }
 
         /*
         |--------------------------------------------------------------------------
         | REDIRECT BERDASARKAN ROLE
         |--------------------------------------------------------------------------
-        |
-        | Setiap role diarahkan ke dashboard miliknya sendiri.
-        | Menggunakan redirect()->route() agar Kabid tidak lagi diarahkan
-        | ke intended URL milik Admin dari session sebelumnya.
-        |
         */
-
-        if ($user->role === 'admin') {
-            return redirect()->route('admin.dashboard');
+        if (
+            $user->role === 'kabid'
+        ) {
+            return redirect()
+                ->route(
+                    'kabid.dashboard'
+                );
         }
 
-        if ($user->role === 'kabid') {
-            return redirect()->route('kabid.dashboard');
+        if (
+            $user->role === 'karyawan'
+        ) {
+            return redirect()
+                ->route(
+                    'karyawan.dashboard'
+                );
         }
 
-        if ($user->role === 'karyawan') {
-            return redirect()->route('karyawan.dashboard');
-        }
-
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()
-            ->route('login')
-            ->withErrors([
-                'email' => 'Role akun tidak dikenali. Silakan hubungi administrator.',
-            ]);
+        return $this->logoutWithError(
+            $request,
+            'Role akun tidak dikenali. Silakan hubungi Administrator.'
+        );
     }
 
     /**
      * Logout user.
      */
-    public function destroy(Request $request): RedirectResponse
-    {
-        Auth::guard('web')->logout();
+    public function destroy(
+        Request $request
+    ): RedirectResponse {
 
-        $request->session()->invalidate();
+        Auth::guard('web')
+            ->logout();
 
-        $request->session()->regenerateToken();
+        $request->session()
+            ->invalidate();
+
+        $request->session()
+            ->regenerateToken();
 
         return redirect('/');
+    }
+
+    /**
+     * Logout + pesan error.
+     */
+    private function logoutWithError(
+        Request $request,
+        string $message
+    ): RedirectResponse {
+
+        Auth::guard('web')
+            ->logout();
+
+        $request->session()
+            ->invalidate();
+
+        $request->session()
+            ->regenerateToken();
+
+        return redirect()
+            ->route('login')
+            ->withErrors([
+                'email' =>
+                $message,
+            ]);
     }
 }

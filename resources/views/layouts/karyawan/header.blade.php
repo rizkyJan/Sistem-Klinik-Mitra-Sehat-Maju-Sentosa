@@ -122,64 +122,99 @@
             ">
 
 
-            {{-- User Information --}}
-            <div class="hidden text-right md:block">
-
-                <p
-                    class="
-                        max-w-[180px]
-                        truncate
-                        text-sm
-                        font-medium
-                        text-slate-700
-                    ">
-
-                    {{ auth()->user()->name }}
-
-                </p>
-
-
-                <p
-                    class="
-                        max-w-[180px]
-                        truncate
-                        text-xs
-                        text-slate-500
-                    ">
-
-                    {{ auth()->user()->department?->name ?? 'Belum ada bidang' }}
-
-                </p>
-
-            </div>
-
-
-
-            {{-- Avatar --}}
-            <div
+            {{-- User Information + Avatar Profil --}}
+            <a
+                href="{{ route('profile.edit') }}"
                 class="
+                    group
                     flex
-                    h-9
-                    w-9
                     shrink-0
                     items-center
-                    justify-center
+                    gap-2
+                    rounded-lg
+                    transition
 
-                    rounded-full
+                    hover:bg-slate-50
 
-                    bg-blue-100
+                    md:pl-2
+                "
+                title="Lihat / Edit Profil">
 
-                    text-sm
-                    font-semibold
-                    text-blue-700
+                {{-- User Information --}}
+                <div class="hidden text-right md:block">
 
-                    sm:h-10
-                    sm:w-10
-                ">
+                    <p
+                        class="
+                            max-w-[180px]
+                            truncate
+                            text-sm
+                            font-medium
+                            text-slate-700
 
-                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                            transition
+                            group-hover:text-blue-700
+                        ">
 
-            </div>
+                        {{ auth()->user()->name }}
+
+                    </p>
+
+
+                    <p
+                        class="
+                            max-w-[180px]
+                            truncate
+                            text-xs
+                            text-slate-500
+                        ">
+
+                        {{ auth()->user()->department?->name ?? 'Belum ada bidang' }}
+
+                    </p>
+
+                </div>
+
+
+                {{-- Avatar Profil --}}
+                <div
+                    class="
+                        flex
+                        h-9
+                        w-9
+                        shrink-0
+                        items-center
+                        justify-center
+
+                        overflow-hidden
+                        rounded-full
+
+                        border
+                        border-slate-200
+
+                        bg-blue-100
+
+                        text-sm
+                        font-semibold
+                        text-blue-700
+
+                        shadow-sm
+
+                        sm:h-10
+                        sm:w-10
+                    ">
+
+                    @if(auth()->user()->formal_photo_path)
+                    <img
+                        src="{{ route('profile.photo') }}"
+                        alt="Foto profil {{ auth()->user()->name }}"
+                        class="block h-full w-full object-cover object-center">
+                    @else
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    @endif
+
+                </div>
+
+            </a>
 
 
 

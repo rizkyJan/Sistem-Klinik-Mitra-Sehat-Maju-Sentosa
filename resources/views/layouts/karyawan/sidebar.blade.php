@@ -443,6 +443,58 @@
             </div>
         </div>
 
+
+        {{-- ========================================================
+            AKUN
+        ======================================================== --}}
+        <div class="mt-8">
+            <p
+                class="
+                    mb-3
+                    px-3
+                    text-xs
+                    font-semibold
+                    uppercase
+                    tracking-wider
+                    text-slate-500
+                ">
+                Akun
+            </p>
+
+            <div class="space-y-1">
+                <a
+                    href="{{ route('profile.edit') }}"
+                    onclick="closeKaryawanSidebar()"
+                    class="
+                        flex items-center gap-3
+                        rounded-lg px-3 py-2.5
+                        text-sm font-medium transition
+                        {{ request()->routeIs('profile.*')
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}
+                    ">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.5"
+                            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a7.5 7.5 0 0115 0" />
+                    </svg>
+
+                    <span class="truncate">
+                        Profil Saya
+                    </span>
+                </a>
+            </div>
+        </div>
+
+
     </nav>
 
 
@@ -458,34 +510,51 @@
             p-4
         ">
 
-        <div class="flex items-center gap-3">
+        <a
+            href="{{ route('profile.edit') }}"
+            onclick="closeKaryawanSidebar()"
+            class="
+                flex items-center gap-3
+                rounded-xl
+                p-2
+                transition
+                hover:bg-slate-800
+                {{ request()->routeIs('profile.*') ? 'bg-slate-800' : '' }}
+            ">
 
-            {{-- Avatar --}}
+            {{-- Avatar / Pas Foto --}}
+            @if(auth()->user()->formal_photo_path)
+            <img
+                src="{{ route('profile.photo') }}"
+                alt="Foto profil {{ auth()->user()->name }}"
+                class="
+                        h-10
+                        w-10
+                        shrink-0
+                        rounded-full
+                        border
+                        border-slate-600
+                        object-cover
+                    ">
+            @else
             <div
                 class="
-                    flex
-                    h-10
-                    w-10
-                    shrink-0
-                    items-center
-                    justify-center
-
-                    rounded-full
-
-                    bg-slate-700
-
-                    text-sm
-                    font-semibold
-                ">
-
+                        flex
+                        h-10
+                        w-10
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-full
+                        bg-slate-700
+                        text-sm
+                        font-semibold
+                    ">
                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-
             </div>
+            @endif
 
-
-            {{-- User Information --}}
             <div class="min-w-0 flex-1">
-
                 <p
                     class="
                         truncate
@@ -493,11 +562,8 @@
                         font-medium
                         text-white
                     ">
-
                     {{ auth()->user()->name }}
-
                 </p>
-
 
                 <p
                     class="
@@ -505,15 +571,27 @@
                         text-xs
                         text-slate-400
                     ">
-
                     {{ auth()->user()->department?->name ?? 'Belum ada bidang' }}
-
                 </p>
 
+                <p class="mt-0.5 text-[11px] font-medium text-blue-400">
+                    Lihat / Edit Profil
+                </p>
             </div>
 
-        </div>
-
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 shrink-0 text-slate-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M9 5l7 7-7 7" />
+            </svg>
+        </a>
     </div>
 
 </aside>

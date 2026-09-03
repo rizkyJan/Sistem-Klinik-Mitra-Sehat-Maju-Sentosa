@@ -342,6 +342,41 @@
                     </span>
                 </a>
 
+
+                {{-- Perubahan Profil Pegawai --}}
+                <a
+                    href="{{ route('admin.profile-updates.index') }}"
+                    onclick="closeAdminSidebar()"
+                    class="
+                        flex items-center gap-3
+                        rounded-lg px-3 py-2.5
+                        text-sm font-medium transition
+                        {{ request()->routeIs('admin.profile-updates.*')
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}
+                    ">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.5"
+                            d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0M17 8l1.5 1.5L21 7" />
+                    </svg>
+
+                    <span class="truncate">
+                        Perubahan Profil
+                    </span>
+
+                    <x-sidebar-notification-badge
+                        :count="$pendingProfileUpdateCount ?? 0" />
+                </a>
+
             </div>
         </div>
 
@@ -524,6 +559,57 @@
     </nav>
 
 
+    {{-- ========================================================
+            AKUN
+        ======================================================== --}}
+    <div class="mt-8">
+        <p
+            class="
+                    mb-3
+                    px-3
+                    text-xs
+                    font-semibold
+                    uppercase
+                    tracking-wider
+                    text-slate-500
+                ">
+            Akun
+        </p>
+
+        <div class="space-y-1">
+            <a
+                href="{{ route('profile.edit') }}"
+                onclick="closeAdminSidebar()"
+                class="
+                        flex items-center gap-3
+                        rounded-lg px-3 py-2.5
+                        text-sm font-medium transition
+                        {{ request()->routeIs('profile.*')
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}
+                    ">
+
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.5"
+                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a7.5 7.5 0 0115 0" />
+                </svg>
+
+                <span class="truncate">
+                    Profil Saya
+                </span>
+            </a>
+        </div>
+    </div>
+
+
 
     {{-- ============================================================
         USER PROFILE BOTTOM
@@ -536,25 +622,45 @@
             p-4
         ">
 
-        <div class="flex items-center gap-3">
+        <a
+            href="{{ route('profile.edit') }}"
+            onclick="closeAdminSidebar()"
+            class="
+                flex items-center gap-3
+                rounded-xl p-2 transition
+                hover:bg-slate-800
+                {{ request()->routeIs('profile.*') ? 'bg-slate-800' : '' }}
+            ">
 
-            {{-- Avatar --}}
+            @if(auth()->user()->formal_photo_path)
+            <img
+                src="{{ route('profile.photo') }}"
+                alt="Foto profil {{ auth()->user()->name }}"
+                class="
+                        h-10
+                        w-10
+                        shrink-0
+                        rounded-full
+                        overflow-hidden
+                        border
+                        border-slate-600
+                        object-cover
+                        object-center
+                    ">
+            @else
             <div
                 class="
-                    flex h-10 w-10 shrink-0
-                    items-center justify-center
-                    rounded-full
-                    bg-slate-700
-                    text-sm
-                    font-semibold
-                ">
+                        flex h-10 w-10 shrink-0
+                        items-center justify-center
+                        rounded-full
+                        bg-slate-700
+                        text-sm font-semibold
+                    ">
                 {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
             </div>
+            @endif
 
-
-            {{-- User Info --}}
             <div class="min-w-0 flex-1">
-
                 <p
                     class="
                         truncate
@@ -569,16 +675,28 @@
                     class="
                         truncate
                         text-xs
-                        capitalize
                         text-slate-400
                     ">
-                    {{ auth()->user()->role }}
+                    Administrator
                 </p>
 
+                <p class="mt-0.5 text-[11px] font-medium text-blue-400">
+                    Lihat / Edit Profil
+                </p>
             </div>
 
-        </div>
-
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 shrink-0 text-slate-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M9 5l7 7-7 7" />
+            </svg>
+        </a>
     </div>
-
 </aside>

@@ -22,8 +22,8 @@
 
         <p class="mt-2 text-sm text-slate-500">
             {{ $user->department?->name ?? 'Bidang belum diatur' }}
-            @if($user->nik)
-            • NIK {{ $user->nik }}
+            @if($user->nip ?? $user->nik)
+            • NIP {{ $user->nip ?? $user->nik }}
             @endif
         </p>
     </div>

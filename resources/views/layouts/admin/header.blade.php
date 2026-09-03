@@ -114,23 +114,42 @@
             </div>
 
 
-            {{-- Avatar --}}
-            <div
+            {{-- Avatar Profil --}}
+            <a
+                href="{{ route('profile.edit') }}"
                 class="
-                    flex h-9 w-9 shrink-0
-                    items-center justify-center
+                    flex
+                    h-9
+                    w-9
+                    shrink-0
+                    items-center
+                    justify-center
+                    overflow-hidden
                     rounded-full
                     bg-blue-100
                     text-sm
                     font-semibold
                     text-blue-700
-
+                    transition
+                    hover:ring-2
+                    hover:ring-blue-200
+                    hover:ring-offset-2
                     sm:h-10
                     sm:w-10
-                ">
-                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-            </div>
+                "
+                title="Lihat / Edit Profil"
+                aria-label="Lihat / Edit Profil {{ auth()->user()->name }}">
 
+                @if(auth()->user()->formal_photo_path)
+                <img
+                    src="{{ route('profile.photo') }}"
+                    alt="Foto profil {{ auth()->user()->name }}"
+                    class="block h-full w-full object-cover object-center">
+                @else
+                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                @endif
+
+            </a>
 
             {{-- Divider --}}
             <div

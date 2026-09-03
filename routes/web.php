@@ -29,6 +29,8 @@ use App\Http\Controllers\Admin\DutyReportController as AdminDutyReportController
 use App\Http\Controllers\Admin\DutyFeeController as AdminDutyFeeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Middleware\ShareKaryawanSidebarCounts;
+use App\Http\Controllers\Admin\EmployeeProfileUpdateRequestController;
+use App\Http\Middleware\ShareAdminProfileUpdateCount;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -44,6 +46,7 @@ Route::middleware([
     'auth',
     'role:admin',
     ShareAdminSidebarCounts::class,
+    ShareAdminProfileUpdateCount::class,
 ])
     ->prefix('admin')
     ->name('admin.')
@@ -53,6 +56,60 @@ Route::middleware([
             DashboardController::class,
             'index'
         ])->name('dashboard');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | PERUBAHAN PROFIL PEGAWAI
+        |--------------------------------------------------------------------------
+        */
+        Route::get(
+            '/perubahan-profil',
+            [
+                EmployeeProfileUpdateRequestController::class,
+                'index'
+            ]
+        )->name('profile-updates.index');
+
+        Route::get(
+            '/perubahan-profil/{profileUpdateRequest}',
+            [
+                EmployeeProfileUpdateRequestController::class,
+                'show'
+            ]
+        )->name('profile-updates.show');
+
+        Route::get(
+            '/perubahan-profil/{profileUpdateRequest}/foto-aktif',
+            [
+                EmployeeProfileUpdateRequestController::class,
+                'currentPhoto'
+            ]
+        )->name('profile-updates.current-photo');
+
+        Route::get(
+            '/perubahan-profil/{profileUpdateRequest}/foto-baru',
+            [
+                EmployeeProfileUpdateRequestController::class,
+                'proposedPhoto'
+            ]
+        )->name('profile-updates.proposed-photo');
+
+        Route::patch(
+            '/perubahan-profil/{profileUpdateRequest}/approve',
+            [
+                EmployeeProfileUpdateRequestController::class,
+                'approve'
+            ]
+        )->name('profile-updates.approve');
+
+        Route::patch(
+            '/perubahan-profil/{profileUpdateRequest}/reject',
+            [
+                EmployeeProfileUpdateRequestController::class,
+                'reject'
+            ]
+        )->name('profile-updates.reject');
 
         Route::get('/notifications/{notification}', [
             NotificationController::class,
@@ -87,6 +144,14 @@ Route::middleware([
             'show'
         ]);
 
+        Route::get(
+            '/kabid/{kabid}/photo',
+            [
+                KabidController::class,
+                'photo'
+            ]
+        )->name('kabid.photo');
+
         Route::put(
             '/kabid/{kabid}/approve',
             [
@@ -110,6 +175,14 @@ Route::middleware([
         )->except([
             'show'
         ]);
+
+        Route::get(
+            '/karyawan/{karyawan}/photo',
+            [
+                KaryawanController::class,
+                'photo'
+            ]
+        )->name('karyawan.photo');
 
         Route::put(
             '/karyawan/{karyawan}/approve',
@@ -663,6 +736,14 @@ Route::middleware([
 |--------------------------------------------------------------------------
 | PROFILE
 |--------------------------------------------------------------------------
+|
+| Admin:
+| - nama/email diperbarui langsung.
+|
+| Karyawan/Kabid:
+| - perubahan profil masuk ke employee_profile_update_requests
+| - data aktif belum berubah sampai ACC Admin.
+|
 */
 Route::middleware('auth')->group(function () {
 
@@ -676,6 +757,23 @@ Route::middleware('auth')->group(function () {
         'update'
     ])->name('profile.update');
 
+    Route::get('/profile/foto', [
+        ProfileController::class,
+        'photo'
+    ])->name('profile.photo');
+
+    Route::get(
+        '/profile/pengajuan-foto/{profileUpdateRequest}',
+        [
+            ProfileController::class,
+            'pendingPhoto'
+        ]
+    )->name('profile.pending-photo');
+
+    /*
+     * Route delete dipertahankan untuk kompatibilitas,
+     * tetapi ProfileController::destroy() menolak self-delete.
+     */
     Route::delete('/profile', [
         ProfileController::class,
         'destroy'

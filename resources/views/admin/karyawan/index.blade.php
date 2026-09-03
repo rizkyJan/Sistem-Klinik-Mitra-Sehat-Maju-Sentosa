@@ -60,7 +60,7 @@
                     type="text"
                     name="search"
                     value="{{ request('search') }}"
-                    placeholder="Cari nama, NIK, email, bidang..."
+                    placeholder="Cari nama, NIP, NIK KTP, email, bidang..."
                     class="w-full max-w-xl
                            rounded-lg border-slate-300">
                 <select
@@ -117,7 +117,7 @@
                         </th>
 
                         <th class="px-6 py-3 text-left text-xs uppercase text-slate-500">
-                            NIK
+                            NIP
                         </th>
 
                         <th class="px-6 py-3 text-left text-xs uppercase text-slate-500">
@@ -204,7 +204,7 @@
 
 
                         <td class="whitespace-nowrap px-6 py-4 text-sm">
-                            {{ $item->nik ?? '-' }}
+                            {{ $item->nip ?? $item->nik ?? '-' }}
                         </td>
 
 
@@ -334,7 +334,8 @@
                                     class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
                                     data-name="{{ $item->name }}"
                                     data-email="{{ $item->email }}"
-                                    data-nik="{{ $item->nik ?? '-' }}"
+                                    data-nip="{{ $item->nip ?? $item->nik ?? '-' }}"
+                                    data-nik-ktp="{{ $item->nik_ktp ?? '-' }}"
                                     data-whatsapp="{{ $item->whatsapp ?? '-' }}"
                                     data-department="{{ $item->department?->name ?? '-' }}"
                                     data-join-date="{{ $item->join_date?->format('d/m/Y') ?? '-' }}"
@@ -470,8 +471,13 @@
             <div class="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:gap-3 sm:p-4">
 
                 <div>
-                    <p class="text-xs font-medium uppercase tracking-wide text-slate-400">NIK</p>
-                    <p id="modalNik" class="mt-1 break-words text-xs font-semibold text-slate-700 sm:text-sm">-</p>
+                    <p class="text-xs font-medium uppercase tracking-wide text-slate-400">NIP</p>
+                    <p id="modalNip" class="mt-1 break-words text-xs font-semibold text-slate-700 sm:text-sm">-</p>
+                </div>
+
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wide text-slate-400">NIK KTP</p>
+                    <p id="modalNikKtp" class="mt-1 break-words text-xs font-semibold text-slate-700 sm:text-sm">-</p>
                 </div>
 
                 <div>
@@ -512,7 +518,7 @@
                         style="min-height: 96px; max-height: 180px; resize: vertical;"
                         maxlength="1000"
                         required
-                        placeholder="Contoh: NIK belum sesuai, silakan perbaiki dan kirim ulang."
+                        placeholder="Contoh: NIP/NIK KTP belum sesuai, silakan perbaiki dan kirim ulang."
                         class="mt-2 block w-full rounded-lg border-red-200 bg-white px-3 py-2.5 text-sm leading-5 focus:border-red-400 focus:ring-red-400"></textarea>
 
                     <p class="mt-1 text-xs text-red-600">
@@ -619,7 +625,8 @@
         selectedEmployee = {
             name: button.dataset.name,
             email: button.dataset.email,
-            nik: button.dataset.nik,
+            nip: button.dataset.nip,
+            nikKtp: button.dataset.nikKtp,
             whatsapp: button.dataset.whatsapp,
             department: button.dataset.department,
             joinDate: button.dataset.joinDate,
@@ -629,7 +636,8 @@
 
         document.getElementById('modalName').textContent = selectedEmployee.name || '-';
         document.getElementById('modalEmail').textContent = selectedEmployee.email || '-';
-        document.getElementById('modalNik').textContent = selectedEmployee.nik || '-';
+        document.getElementById('modalNip').textContent = selectedEmployee.nip || '-';
+        document.getElementById('modalNikKtp').textContent = selectedEmployee.nikKtp || '-';
         document.getElementById('modalWhatsapp').textContent = selectedEmployee.whatsapp || '-';
         document.getElementById('modalDepartment').textContent = selectedEmployee.department || '-';
         document.getElementById('modalJoinDate').textContent = selectedEmployee.joinDate || '-';
