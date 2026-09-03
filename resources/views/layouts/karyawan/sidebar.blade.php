@@ -313,6 +313,48 @@
 
 
         {{-- ========================================================
+            SURAT DINAS
+        ======================================================== --}}
+        <div class="mt-8">
+            <p
+                class="
+                    mb-3
+                    px-3
+                    text-xs
+                    font-semibold
+                    uppercase
+                    tracking-wider
+                    text-slate-500
+                ">
+                Surat Dinas
+            </p>
+
+            <div class="space-y-1">
+                <a
+                    href="{{ route('karyawan.duty-letters.index') }}"
+                    onclick="closeKaryawanSidebar()"
+                    class="
+                        flex items-center gap-3
+                        rounded-lg px-3 py-2.5
+                        text-sm font-medium transition
+                        {{ request()->routeIs('karyawan.duty-letters.*')
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}
+                    ">
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 3h7l5 5v13H7V3zM14 3v5h5M10 13h6M10 17h6" />
+                    </svg>
+
+                    <span class="truncate">
+                        Surat Dinas Saya
+                    </span>
+                </a>
+            </div>
+        </div>
+
+
+        {{-- ========================================================
             KEUANGAN
         ======================================================== --}}
         <div class="mt-8">

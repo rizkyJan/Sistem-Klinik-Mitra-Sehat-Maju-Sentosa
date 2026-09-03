@@ -111,6 +111,78 @@
     </div>
 
 
+    {{-- SURAT DINAS --}}
+    <div class="space-y-4">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-slate-800">Surat Dinas</h2>
+                <p class="mt-1 text-sm text-slate-500">Ringkasan penugasan, laporan, dan pembayaran fee dinas.</p>
+            </div>
+
+            <a href="{{ route('admin.duty-letters.index') }}" class="text-sm font-semibold text-blue-600 hover:text-blue-700">
+                Kelola Surat Dinas →
+            </a>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <a href="{{ route('admin.duty-letters.index') }}" class="rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-sm transition hover:border-blue-300">
+                <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">Aktif / Mendatang</p>
+                <p class="mt-2 text-2xl font-bold text-blue-800">{{ $dutyActiveCount }}</p>
+            </a>
+
+            <a href="{{ route('admin.duty-letters.index') }}" class="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm transition hover:border-amber-300">
+                <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">Menunggu Laporan</p>
+                <p class="mt-2 text-2xl font-bold text-amber-800">{{ $dutyWaitingReportCount }}</p>
+            </a>
+
+            <a href="{{ route('admin.duty-letters.index') }}" class="rounded-xl border border-violet-200 bg-violet-50 p-4 shadow-sm transition hover:border-violet-300">
+                <p class="text-xs font-semibold uppercase tracking-wide text-violet-700">Perlu Verifikasi</p>
+                <p class="mt-2 text-2xl font-bold text-violet-800">{{ $dutyPendingVerificationCount }}</p>
+            </a>
+
+            <a href="{{ route('admin.duty-letters.index') }}" class="rounded-xl border border-orange-200 bg-orange-50 p-4 shadow-sm transition hover:border-orange-300">
+                <p class="text-xs font-semibold uppercase tracking-wide text-orange-700">Perlu Perbaikan</p>
+                <p class="mt-2 text-2xl font-bold text-orange-800">{{ $dutyRevisionCount }}</p>
+            </a>
+
+            <a href="{{ route('admin.duty-letters.index') }}" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm transition hover:border-emerald-300">
+                <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Fee Belum Dibayar</p>
+                <p class="mt-2 text-2xl font-bold text-emerald-800">{{ $dutyUnpaidFeeCount }}</p>
+            </a>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-2">
+            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div class="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-4 sm:px-5">
+                    <div>
+                        <h3 class="font-semibold text-slate-800">Laporan Menunggu Verifikasi</h3>
+                        <p class="mt-1 text-xs text-slate-500">Lima laporan terbaru yang perlu diperiksa.</p>
+                    </div>
+                    <span class="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">{{ $dutyPendingVerificationCount }}</span>
+                </div>
+
+                <div class="divide-y divide-slate-100">
+                    @forelse($pendingDutyReports as $assignment)
+                    <a href="{{ route('admin.duty-reports.show', [$assignment->dutyLetter, $assignment]) }}" class="block px-4 py-4 transition hover:bg-slate-50 sm:px-5">
+                        <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div class="min-w-0">
+                                <p class="break-words text-sm font-semibold text-slate-800">{{ $assignment->assignee_name }}</p>
+                                <p class="mt-1 break-words text-sm text-slate-600">{{ $assignment->dutyLetter?->title ?? 'Surat Dinas' }}</p>
+                                <p class="mt-1 text-xs text-slate-400">{{ $assignment->report_submitted_at?->format('d/m/Y H:i') }}</p>
+                            </div>
+                            <span class="w-fit shrink-0 rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">Periksa</span>
+                        </div>
+                    </a>
+                    @empty
+                    <div class="px-5 py-10 text-center text-sm text-slate-500">Tidak ada laporan dinas yang menunggu verifikasi.</div>
+                    @endforelse
+                </div>
+            </div>
+
+            <x-duty-notification-panel :notifications="$recentDutyNotifications" role="admin" />
+        </div>
+    </div>
+
     {{-- PEGAWAI --}}
     <div class="grid gap-4 sm:grid-cols-2">
 

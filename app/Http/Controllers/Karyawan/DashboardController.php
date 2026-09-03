@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Karyawan;
 
 use App\Http\Controllers\Controller;
+use App\Models\DutyAssignment;
+use App\Models\DutyLetter;
 use App\Models\LeaveRequest;
 use App\Models\Reimbursement;
 use App\Models\User;
@@ -168,6 +170,52 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Surat Dinas Pribadi
+        |--------------------------------------------------------------------------
+        */
+        $dutyBaseQuery = DutyAssignment::query()
+            ->where('user_id', $user->id);
+
+        $dutyUpcomingCount = (clone $dutyBaseQuery)
+            ->whereHas('dutyLetter', fn($query) => $query
+                ->where('status', DutyLetter::STATUS_PUBLISHED)
+                ->whereDate('event_date', '>=', today()))
+            ->count();
+
+        $dutyWaitingReportCount = (clone $dutyBaseQuery)
+            ->where('report_status', DutyAssignment::REPORT_PENDING)
+            ->whereHas('dutyLetter', fn($query) => $query
+                ->where('status', DutyLetter::STATUS_PUBLISHED)
+                ->whereDate('event_date', '<=', today()))
+            ->count();
+
+        $dutyWaitingVerificationCount = (clone $dutyBaseQuery)
+            ->where('report_status', DutyAssignment::REPORT_SUBMITTED)
+            ->count();
+
+        $dutyUnpaidFeeCount = (clone $dutyBaseQuery)
+            ->where('report_status', DutyAssignment::REPORT_VERIFIED)
+            ->where('fee_status', DutyAssignment::FEE_UNPAID)
+            ->count();
+
+        $todayDutyAssignments = (clone $dutyBaseQuery)
+            ->with('dutyLetter')
+            ->whereHas('dutyLetter', fn($query) => $query
+                ->where('status', DutyLetter::STATUS_PUBLISHED)
+                ->whereDate('event_date', today()))
+            ->get();
+
+        $recentDutyNotifications = $user->notifications()
+            ->latest()
+            ->limit(20)
+            ->get()
+            ->filter(fn($notification) => ($notification->data['module'] ?? null) === 'duty')
+            ->take(5)
+            ->values();
+
         return view(
             'karyawan.dashboard',
             compact(
@@ -182,7 +230,13 @@ class DashboardController extends Controller
                 'availableAnnualLeave',
                 'pendingReimbursementCount',
                 'paidReimbursementTotal',
-                'recentLeaveRequests'
+                'recentLeaveRequests',
+                'dutyUpcomingCount',
+                'dutyWaitingReportCount',
+                'dutyWaitingVerificationCount',
+                'dutyUnpaidFeeCount',
+                'todayDutyAssignments',
+                'recentDutyNotifications'
             )
         );
     }

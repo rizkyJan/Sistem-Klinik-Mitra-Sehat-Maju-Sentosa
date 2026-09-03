@@ -111,4 +111,52 @@ class User extends Authenticatable
             'reviewed_by'
         );
     }
+
+
+    /**
+     * Surat dinas yang dibuat oleh Admin ini.
+     */
+    public function createdDutyLetters(): HasMany
+    {
+        return $this->hasMany(
+            DutyLetter::class,
+            'created_by'
+        );
+    }
+
+
+    /**
+     * Surat dinas yang ditugaskan kepada user ini.
+     */
+    public function dutyAssignments(): HasMany
+    {
+        return $this->hasMany(
+            DutyAssignment::class,
+            'user_id'
+        );
+    }
+
+
+    /**
+     * Laporan surat dinas yang diverifikasi oleh Admin ini.
+     */
+    public function verifiedDutyAssignments(): HasMany
+    {
+        return $this->hasMany(
+            DutyAssignment::class,
+            'report_verified_by'
+        );
+    }
+
+
+    /**
+     * Pembayaran fee surat dinas yang dikonfirmasi oleh Admin ini.
+     */
+    public function feeConfirmedDutyAssignments(): HasMany
+    {
+        return $this->hasMany(
+            DutyAssignment::class,
+            'fee_confirmed_by'
+        );
+    }
 }

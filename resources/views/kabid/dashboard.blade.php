@@ -108,6 +108,67 @@
     </div>
 
 
+    {{-- SURAT DINAS SAYA --}}
+    <div class="space-y-4">
+        <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-slate-800">Surat Dinas Saya</h2>
+                <p class="mt-1 text-sm text-slate-500">Pantau tugas, laporan, dan status fee dinas Anda.</p>
+            </div>
+            <a href="{{ route('kabid.duty-letters.index') }}" class="text-sm font-semibold text-blue-600 hover:text-blue-700">Lihat semua →</a>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <a href="{{ route('kabid.duty-letters.index', ['filter' => 'upcoming']) }}" class="rounded-xl border border-blue-200 bg-blue-50 p-4 shadow-sm transition hover:border-blue-300">
+                <p class="text-xs font-semibold uppercase tracking-wide text-blue-700">Mendatang</p>
+                <p class="mt-2 text-2xl font-bold text-blue-800">{{ $dutyUpcomingCount }}</p>
+            </a>
+
+            <a href="{{ route('kabid.duty-letters.index', ['filter' => 'report_pending']) }}" class="rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-sm transition hover:border-amber-300">
+                <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">Laporan Belum Dibuat</p>
+                <p class="mt-2 text-2xl font-bold text-amber-800">{{ $dutyWaitingReportCount }}</p>
+            </a>
+
+            <a href="{{ route('kabid.duty-letters.index') }}" class="rounded-xl border border-violet-200 bg-violet-50 p-4 shadow-sm transition hover:border-violet-300">
+                <p class="text-xs font-semibold uppercase tracking-wide text-violet-700">Menunggu Verifikasi</p>
+                <p class="mt-2 text-2xl font-bold text-violet-800">{{ $dutyWaitingVerificationCount }}</p>
+            </a>
+
+            <a href="{{ route('kabid.duty-letters.index', ['filter' => 'report_verified']) }}" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm transition hover:border-emerald-300">
+                <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Fee Belum Dibayar</p>
+                <p class="mt-2 text-2xl font-bold text-emerald-800">{{ $dutyUnpaidFeeCount }}</p>
+            </a>
+        </div>
+
+        @if($todayDutyAssignments->isNotEmpty())
+        <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 sm:p-5">
+            <div class="flex items-start gap-3">
+                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3M5 11h14M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
+                    </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="font-semibold text-blue-900">Surat Dinas Hari Ini</p>
+                    <div class="mt-2 space-y-2">
+                        @foreach($todayDutyAssignments as $assignment)
+                        <a href="{{ route('kabid.duty-letters.show', $assignment) }}" class="block rounded-lg bg-white/80 p-3 transition hover:bg-white">
+                            <p class="break-words text-sm font-semibold text-slate-800">{{ $assignment->dutyLetter?->title }}</p>
+                            <p class="mt-1 break-words text-xs text-slate-500">
+                                {{ substr((string) $assignment->dutyLetter?->start_time, 0, 5) }} WIB
+                                • {{ $assignment->dutyLetter?->location_name }}
+                            </p>
+                        </a>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <x-duty-notification-panel :notifications="$recentDutyNotifications" role="kabid" />
+    </div>
+
     <div class="grid gap-6 xl:grid-cols-3">
 
         {{-- SALDO CUTI --}}

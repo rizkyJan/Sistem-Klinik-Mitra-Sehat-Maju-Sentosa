@@ -20,6 +20,15 @@ use App\Http\Middleware\ShareAdminSidebarCounts;
 use App\Http\Middleware\ShareKabidSidebarCounts;
 use App\Http\Controllers\Admin\ReimbursementController as AdminReimbursementController;
 use App\Http\Controllers\Karyawan\ReimbursementController as KaryawanReimbursementController;
+use App\Http\Controllers\Admin\DutyLetterController as AdminDutyLetterController;
+use App\Http\Controllers\Kabid\DutyLetterController as KabidDutyLetterController;
+use App\Http\Controllers\Karyawan\DutyLetterController as KaryawanDutyLetterController;
+use App\Http\Controllers\Kabid\DutyReportController as KabidDutyReportController;
+use App\Http\Controllers\Karyawan\DutyReportController as KaryawanDutyReportController;
+use App\Http\Controllers\Admin\DutyReportController as AdminDutyReportController;
+use App\Http\Controllers\Admin\DutyFeeController as AdminDutyFeeController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Middleware\ShareKaryawanSidebarCounts;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -44,6 +53,16 @@ Route::middleware([
             DashboardController::class,
             'index'
         ])->name('dashboard');
+
+        Route::get('/notifications/{notification}', [
+            NotificationController::class,
+            'open'
+        ])->name('notifications.open');
+
+        Route::patch('/notifications/read-all', [
+            NotificationController::class,
+            'readAll'
+        ])->name('notifications.read-all');
 
         Route::resource(
             'admins',
@@ -185,6 +204,115 @@ Route::middleware([
             AdminReimbursementController::class,
             'show'
         ])->name('reimbursements.show');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SURAT DINAS
+        |--------------------------------------------------------------------------
+        |
+        | Admin menerbitkan surat langsung kepada satu atau beberapa
+        | Karyawan/Kabid. Tidak ada proses ACC dari penerima.
+        |
+        */
+        Route::get('/surat-dinas', [
+            AdminDutyLetterController::class,
+            'index'
+        ])->name('duty-letters.index');
+
+        Route::get('/surat-dinas/create', [
+            AdminDutyLetterController::class,
+            'create'
+        ])->name('duty-letters.create');
+
+        Route::post('/surat-dinas', [
+            AdminDutyLetterController::class,
+            'store'
+        ])->name('duty-letters.store');
+
+        Route::get('/surat-dinas/{dutyLetter}/edit', [
+            AdminDutyLetterController::class,
+            'edit'
+        ])->name('duty-letters.edit');
+
+        Route::put('/surat-dinas/{dutyLetter}', [
+            AdminDutyLetterController::class,
+            'update'
+        ])->name('duty-letters.update');
+
+        Route::get('/surat-dinas/{dutyLetter}/pdf', [
+            AdminDutyLetterController::class,
+            'pdf'
+        ])->name('duty-letters.pdf');
+
+        Route::patch('/surat-dinas/{dutyLetter}/cancel', [
+            AdminDutyLetterController::class,
+            'cancel'
+        ])->name('duty-letters.cancel');
+
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | VERIFIKASI LAPORAN SURAT DINAS - ADMIN
+        |--------------------------------------------------------------------------
+        */
+        Route::get(
+            '/surat-dinas/{dutyLetter}/penerima/{dutyAssignment}/laporan',
+            [
+                AdminDutyReportController::class,
+                'show'
+            ]
+        )->name('duty-reports.show');
+
+        Route::get(
+            '/surat-dinas/{dutyLetter}/penerima/{dutyAssignment}/laporan/foto/{dutyReportFile}',
+            [
+                AdminDutyReportController::class,
+                'file'
+            ]
+        )->name('duty-reports.file');
+
+        Route::patch(
+            '/surat-dinas/{dutyLetter}/penerima/{dutyAssignment}/laporan/verify',
+            [
+                AdminDutyReportController::class,
+                'verify'
+            ]
+        )->name('duty-reports.verify');
+
+        Route::patch(
+            '/surat-dinas/{dutyLetter}/penerima/{dutyAssignment}/laporan/revision',
+            [
+                AdminDutyReportController::class,
+                'requestRevision'
+            ]
+        )->name('duty-reports.revision');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | KONFIRMASI FEE SURAT DINAS - ADMIN
+        |--------------------------------------------------------------------------
+        |
+        | Tidak ada nominal fee di modul ini.
+        | Admin hanya mengonfirmasi bahwa fee sudah dibayarkan
+        | setelah laporan pegawai berstatus Diverifikasi.
+        |
+        */
+        Route::patch(
+            '/surat-dinas/{dutyLetter}/penerima/{dutyAssignment}/fee/paid',
+            [
+                AdminDutyFeeController::class,
+                'markPaid'
+            ]
+        )->name('duty-fees.paid');
+
+
+        Route::get('/surat-dinas/{dutyLetter}', [
+            AdminDutyLetterController::class,
+            'show'
+        ])->name('duty-letters.show');
     });
 
 
@@ -206,6 +334,16 @@ Route::middleware([
             KabidDashboardController::class,
             'index'
         ])->name('dashboard');
+
+        Route::get('/notifications/{notification}', [
+            NotificationController::class,
+            'open'
+        ])->name('notifications.open');
+
+        Route::patch('/notifications/read-all', [
+            NotificationController::class,
+            'readAll'
+        ])->name('notifications.read-all');
 
 
         /*
@@ -320,6 +458,62 @@ Route::middleware([
             KabidReimbursementController::class,
             'show'
         ])->name('reimbursements.show');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SURAT DINAS SAYA - KABID
+        |--------------------------------------------------------------------------
+        |
+        | Surat langsung muncul ke Kabid yang ditugaskan Admin.
+        | Tidak ada proses terima/tolak/ACC dari penerima.
+        |
+        */
+        Route::get('/surat-dinas', [
+            KabidDutyLetterController::class,
+            'index'
+        ])->name('duty-letters.index');
+
+        Route::get('/surat-dinas/{dutyAssignment}/pdf', [
+            KabidDutyLetterController::class,
+            'pdf'
+        ])->name('duty-letters.pdf');
+
+        /*
+        |--------------------------------------------------------------------------
+        | LAPORAN HASIL DINAS - KABID
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/surat-dinas/{dutyAssignment}/laporan', [
+            KabidDutyReportController::class,
+            'edit'
+        ])->name('duty-reports.edit');
+
+        Route::post('/surat-dinas/{dutyAssignment}/laporan', [
+            KabidDutyReportController::class,
+            'store'
+        ])->name('duty-reports.store');
+
+        Route::get(
+            '/surat-dinas/{dutyAssignment}/laporan/foto/{dutyReportFile}',
+            [
+                KabidDutyReportController::class,
+                'file'
+            ]
+        )->name('duty-reports.file');
+
+        Route::delete(
+            '/surat-dinas/{dutyAssignment}/laporan/foto/{dutyReportFile}',
+            [
+                KabidDutyReportController::class,
+                'destroyFile'
+            ]
+        )->name('duty-reports.files.destroy');
+
+        Route::get('/surat-dinas/{dutyAssignment}', [
+            KabidDutyLetterController::class,
+            'show'
+        ])->name('duty-letters.show');
     });
 
 
@@ -331,6 +525,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'role:karyawan',
+    ShareKaryawanSidebarCounts::class,
 ])
     ->prefix('karyawan')
     ->name('karyawan.')
@@ -340,6 +535,16 @@ Route::middleware([
             KaryawanDashboardController::class,
             'index'
         ])->name('dashboard');
+
+        Route::get('/notifications/{notification}', [
+            NotificationController::class,
+            'open'
+        ])->name('notifications.open');
+
+        Route::patch('/notifications/read-all', [
+            NotificationController::class,
+            'readAll'
+        ])->name('notifications.read-all');
 
         Route::get('/cuti', [
             KaryawanLeaveRequestController::class,
@@ -395,6 +600,62 @@ Route::middleware([
             KaryawanReimbursementController::class,
             'show'
         ])->name('reimbursements.show');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | SURAT DINAS SAYA - KARYAWAN
+        |--------------------------------------------------------------------------
+        |
+        | Surat langsung muncul ke Karyawan yang ditugaskan Admin.
+        | Tidak ada proses terima/tolak/ACC dari penerima.
+        |
+        */
+        Route::get('/surat-dinas', [
+            KaryawanDutyLetterController::class,
+            'index'
+        ])->name('duty-letters.index');
+
+        Route::get('/surat-dinas/{dutyAssignment}/pdf', [
+            KaryawanDutyLetterController::class,
+            'pdf'
+        ])->name('duty-letters.pdf');
+
+        /*
+        |--------------------------------------------------------------------------
+        | LAPORAN HASIL DINAS - KARYAWAN
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/surat-dinas/{dutyAssignment}/laporan', [
+            KaryawanDutyReportController::class,
+            'edit'
+        ])->name('duty-reports.edit');
+
+        Route::post('/surat-dinas/{dutyAssignment}/laporan', [
+            KaryawanDutyReportController::class,
+            'store'
+        ])->name('duty-reports.store');
+
+        Route::get(
+            '/surat-dinas/{dutyAssignment}/laporan/foto/{dutyReportFile}',
+            [
+                KaryawanDutyReportController::class,
+                'file'
+            ]
+        )->name('duty-reports.file');
+
+        Route::delete(
+            '/surat-dinas/{dutyAssignment}/laporan/foto/{dutyReportFile}',
+            [
+                KaryawanDutyReportController::class,
+                'destroyFile'
+            ]
+        )->name('duty-reports.files.destroy');
+
+        Route::get('/surat-dinas/{dutyAssignment}', [
+            KaryawanDutyLetterController::class,
+            'show'
+        ])->name('duty-letters.show');
     });
 
 
