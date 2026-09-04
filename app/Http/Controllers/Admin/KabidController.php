@@ -198,6 +198,7 @@ class KabidController extends Controller
                     'required',
                     'image',
                     'mimes:jpg,jpeg,png,webp',
+                    'dimensions:ratio=1/1',
                     'max:2048',
                 ],
 
@@ -250,6 +251,7 @@ class KabidController extends Controller
                 'formal_photo.required' => 'Pas foto formal wajib diunggah.',
                 'formal_photo.image' => 'Pas foto harus berupa file gambar.',
                 'formal_photo.mimes' => 'Pas foto harus JPG, JPEG, PNG, atau WEBP.',
+                'formal_photo.dimensions' => 'Pas foto harus sudah dicrop menjadi rasio 1:1.',
                 'formal_photo.max' => 'Ukuran pas foto maksimal 2 MB.',
                 'bank_account_number.required' => 'Nomor rekening BSI wajib diisi.',
                 'bank_account_number.regex' => 'Nomor rekening BSI harus berupa 8-20 digit angka.',
@@ -469,6 +471,7 @@ class KabidController extends Controller
                     'nullable',
                     'image',
                     'mimes:jpg,jpeg,png,webp',
+                    'dimensions:ratio=1/1',
                     'max:2048',
                 ],
 
@@ -520,6 +523,7 @@ class KabidController extends Controller
                 'formal_photo.required' => 'Pas foto formal wajib diunggah karena data lama belum memiliki foto.',
                 'formal_photo.image' => 'Pas foto harus berupa file gambar.',
                 'formal_photo.mimes' => 'Pas foto harus JPG, JPEG, PNG, atau WEBP.',
+                'formal_photo.dimensions' => 'Pas foto harus sudah dicrop menjadi rasio 1:1.',
                 'formal_photo.max' => 'Ukuran pas foto maksimal 2 MB.',
                 'bank_account_number.required' => 'Nomor rekening BSI wajib diisi.',
                 'bank_account_number.regex' => 'Nomor rekening BSI harus berupa 8-20 digit angka.',

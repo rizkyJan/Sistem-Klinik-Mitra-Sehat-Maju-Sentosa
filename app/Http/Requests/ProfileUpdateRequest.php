@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Department;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -40,10 +39,7 @@ class ProfileUpdateRequest extends FormRequest
     {
         $user = $this->user();
 
-        /*
-         * Admin tetap dapat mengubah data akun dasarnya secara langsung.
-         * Workflow ACC perubahan profil hanya untuk Karyawan/Kabid.
-         */
+
         if ($user?->role === 'admin') {
             return [
                 'name' => [
@@ -61,8 +57,24 @@ class ProfileUpdateRequest extends FormRequest
                     Rule::unique('users', 'email')
                         ->ignore($user->id),
                 ],
+
+                'formal_photo' => [
+                    'nullable',
+                    'image',
+                    'mimes:jpg,jpeg,png,webp',
+                    'dimensions:ratio=1/1',
+                    'max:2048',
+                ],
             ];
         }
+
+        $employeePhotoRules = [
+            'nullable',
+            'image',
+            'mimes:jpg,jpeg,png,webp',
+            'dimensions:ratio=1/1',
+            'max:2048',
+        ];
 
         return [
             'name' => [
@@ -88,9 +100,7 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique('users', 'nip')
                     ->ignore($user->id),
 
-                /*
-                 * Kolom `nik` legacy masih ada selama masa transisi.
-                 */
+
                 Rule::unique('users', 'nik')
                     ->ignore($user->id),
             ],
@@ -109,11 +119,7 @@ class ProfileUpdateRequest extends FormRequest
                 'max:20',
             ],
 
-            /*
-             * Sesuai kebutuhan "semua data profil bisa diajukan update",
-             * tanggal mulai kerja dan bidang boleh diajukan perubahan,
-             * tetapi TIDAK langsung aktif sebelum ACC Admin.
-             */
+
             'join_date' => [
                 'required',
                 'date',
@@ -196,20 +202,10 @@ class ProfileUpdateRequest extends FormRequest
                 'after_or_equal:sip_valid_from',
             ],
 
-            /*
-             * Foto tidak wajib kalau user hanya mengubah data teks.
-             */
-            'formal_photo' => [
-                'nullable',
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:2048',
-            ],
 
-            /*
-             * Bank tidak pernah diterima dari request.
-             * Backend selalu mempertahankan BSI.
-             */
+            'formal_photo' => $employeePhotoRules,
+
+
             'bank_account_number' => [
                 'required',
                 'string',
@@ -307,6 +303,9 @@ class ProfileUpdateRequest extends FormRequest
 
             'formal_photo.mimes' =>
             'Pas foto formal harus JPG, JPEG, PNG, atau WEBP.',
+
+            'formal_photo.dimensions' =>
+            'Pas foto formal harus sudah dicrop menjadi rasio 1:1.',
 
             'formal_photo.max' =>
             'Ukuran pas foto formal maksimal 2 MB.',

@@ -21,7 +21,7 @@ class ProfileController extends Controller
      * Halaman Profil.
      *
      * Admin:
-     * - update nama/email langsung.
+     * - update nama/email/foto langsung.
      *
      * Karyawan/Kabid:
      * - semua perubahan profil masuk sebagai pengajuan
@@ -124,19 +124,47 @@ class ProfileController extends Controller
                 $validated['email']
                 !== $user->email;
 
-            $user->forceFill([
-                'name' =>
-                $validated['name'],
+            $oldPhotoPath = $user->formal_photo_path;
+            $newPhotoPath = null;
 
-                'email' =>
-                $validated['email'],
-            ]);
-
-            if ($emailChanged) {
-                $user->email_verified_at = null;
+            if ($request->hasFile('formal_photo')) {
+                $newPhotoPath = $request->file('formal_photo')
+                    ->store('admin-photos', 'local');
             }
 
-            $user->save();
+            try {
+                $user->forceFill([
+                    'name' =>
+                    $validated['name'],
+
+                    'email' =>
+                    $validated['email'],
+                ]);
+
+                if ($newPhotoPath) {
+                    $user->formal_photo_path = $newPhotoPath;
+                }
+
+                if ($emailChanged) {
+                    $user->email_verified_at = null;
+                }
+
+                $user->save();
+            } catch (\Throwable $exception) {
+                if ($newPhotoPath) {
+                    Storage::disk('local')->delete($newPhotoPath);
+                }
+
+                throw $exception;
+            }
+
+            if (
+                $newPhotoPath
+                && $oldPhotoPath
+                && $oldPhotoPath !== $newPhotoPath
+            ) {
+                Storage::disk('local')->delete($oldPhotoPath);
+            }
 
             return redirect()
                 ->route('profile.edit')

@@ -132,6 +132,14 @@ Route::middleware([
                 'show'
             ]);
 
+        Route::get(
+            '/admins/{adminUser}/photo',
+            [
+                AdminUserController::class,
+                'photo'
+            ]
+        )->name('admins.photo');
+
         /*
         |--------------------------------------------------------------------------
         | KELOLA KABID

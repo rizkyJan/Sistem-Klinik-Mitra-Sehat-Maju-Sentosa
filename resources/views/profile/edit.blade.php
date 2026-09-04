@@ -70,12 +70,168 @@ return $value;
 return $value;
 };
 @endphp
+<style>
+    .simi-profile-page {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
 
-<div class="space-y-6">
+    .simi-profile-page section,
+    .simi-profile-page form,
+    .simi-profile-page fieldset,
+    .simi-profile-page input,
+    .simi-profile-page select,
+    .simi-profile-page textarea {
+        max-width: 100%;
+        min-width: 0;
+    }
 
-    {{-- ============================================================
-         FLASH MESSAGE
-    ============================================================ --}}
+    .simi-profile-hero {
+        display: grid;
+        grid-template-columns: 128px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 24px;
+        padding: 24px;
+    }
+
+    .simi-profile-hero-photo,
+    .simi-profile-hero-placeholder {
+        width: 128px !important;
+        height: 128px !important;
+        max-width: 128px !important;
+        min-width: 128px !important;
+        aspect-ratio: 1 / 1;
+        border-radius: 16px;
+        flex: 0 0 128px;
+    }
+
+    .simi-profile-hero-photo {
+        display: block;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .simi-profile-hero-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .simi-profile-hero-main {
+        min-width: 0;
+    }
+
+    .simi-profile-hero-name {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .simi-profile-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 24px;
+        margin-top: 12px;
+    }
+
+    .simi-profile-meta p {
+        min-width: 0;
+        margin: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .simi-profile-status {
+        justify-self: end;
+        white-space: nowrap;
+    }
+
+    .simi-current-profile-photo {
+        width: 96px !important;
+        height: 96px !important;
+        max-width: 96px !important;
+        min-width: 96px !important;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .simi-pending-profile-photo {
+        width: 144px !important;
+        height: 144px !important;
+        max-width: 144px !important;
+        min-width: 144px !important;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    @media (max-width: 960px) {
+        .simi-profile-hero {
+            grid-template-columns: 112px minmax(0, 1fr);
+            gap: 20px;
+        }
+
+        .simi-profile-hero-photo,
+        .simi-profile-hero-placeholder {
+            width: 112px !important;
+            height: 112px !important;
+            max-width: 112px !important;
+            min-width: 112px !important;
+            flex-basis: 112px;
+        }
+
+        .simi-profile-status {
+            grid-column: 2;
+            justify-self: start;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .simi-profile-hero {
+            grid-template-columns: minmax(0, 1fr);
+            align-items: start;
+            gap: 16px;
+            padding: 20px;
+        }
+
+        .simi-profile-hero-photo,
+        .simi-profile-hero-placeholder {
+            width: 96px !important;
+            height: 96px !important;
+            max-width: 96px !important;
+            min-width: 96px !important;
+            flex-basis: 96px;
+        }
+
+        .simi-profile-meta {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 8px;
+        }
+
+        .simi-profile-status {
+            grid-column: 1;
+            justify-self: start;
+        }
+
+        .simi-current-profile-photo {
+            width: 80px !important;
+            height: 80px !important;
+            max-width: 80px !important;
+            min-width: 80px !important;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .simi-profile-hero {
+            padding: 16px;
+        }
+    }
+</style>
+
+<div class="space-y-6 simi-profile-page">
+
+
     @foreach([
     'success' => ['emerald', 'Berhasil'],
     'error' => ['red', 'Perhatian'],
@@ -108,9 +264,7 @@ return $value;
     @endif
 
 
-    {{-- ============================================================
-         ADMIN PROFILE
-    ============================================================ --}}
+
     @if($isAdmin)
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
@@ -126,10 +280,38 @@ return $value;
         <form
             method="POST"
             action="{{ route('profile.update') }}"
+            enctype="multipart/form-data"
             class="grid gap-5 p-5 sm:p-6 md:grid-cols-2">
 
             @csrf
             @method('PATCH')
+
+            <div class="md:col-span-2 space-y-4">
+                @if($user->formal_photo_path)
+                <div class="flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <img
+                        src="{{ route('profile.photo') }}"
+                        alt="Foto profil {{ $user->name }}"
+                        class="simi-current-profile-photo shrink-0 rounded-xl border border-slate-200 bg-white shadow-sm">
+
+                    <div>
+                        <p class="text-sm font-semibold text-slate-800">
+                            Foto Profil Saat Ini
+                        </p>
+                        <p class="mt-1 text-xs leading-5 text-slate-500">
+                            Pilih foto baru di bawah jika ingin menggantinya.
+                        </p>
+                    </div>
+                </div>
+                @endif
+
+                <x-profile-photo-cropper
+                    input-id="formal_photo"
+                    input-name="formal_photo"
+                    :required="false"
+                    label="{{ $user->formal_photo_path ? 'Ganti Foto Profil' : 'Tambah Foto Profil' }}"
+                    help="Geser dan zoom foto sampai bagian yang diinginkan pas di kotak 1:1. Foto hanya berubah setelah tombol Simpan Profil ditekan." />
+            </div>
 
             <div>
                 <label for="name" class="block text-sm font-semibold text-slate-700">
@@ -171,36 +353,33 @@ return $value;
 
     @else
 
-    {{-- ============================================================
-         HEADER PEGAWAI
-    ============================================================ --}}
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-6">
-            <div class="shrink-0">
+        <div class="simi-profile-hero">
+            <div>
                 @if($user->formal_photo_path)
                 <img
                     src="{{ route('profile.photo') }}"
                     alt="Pas foto {{ $user->name }}"
-                    class="h-36 w-28 rounded-xl border border-slate-200 object-cover shadow-sm">
+                    class="simi-profile-hero-photo border border-slate-200 bg-white shadow-sm">
                 @else
-                <div class="flex h-36 w-28 items-center justify-center rounded-xl bg-slate-100 text-3xl font-bold text-slate-500">
+                <div class="simi-profile-hero-placeholder bg-slate-100 text-3xl font-bold text-slate-500">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
                 </div>
                 @endif
             </div>
 
-            <div class="min-w-0 flex-1">
+            <div class="simi-profile-hero-main">
                 <p class="text-sm font-semibold text-blue-600">
                     {{ $user->role === 'kabid' ? 'Kabid' : 'Karyawan' }}
                     •
                     {{ $user->department?->name ?? 'Bidang belum diatur' }}
                 </p>
 
-                <h1 class="mt-1 break-words text-2xl font-bold text-slate-900">
+                <h1 class="simi-profile-hero-name mt-1 text-2xl font-bold text-slate-900">
                     {{ $user->name }}
                 </h1>
 
-                <div class="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                <div class="simi-profile-meta text-sm text-slate-600">
                     <p>
                         <span class="font-medium">NIP:</span>
                         {{ $user->nip ?? $user->nik ?? '-' }}
@@ -223,7 +402,7 @@ return $value;
                 </div>
             </div>
 
-            <div class="shrink-0">
+            <div class="simi-profile-status">
                 @if($hasPending)
                 <span class="inline-flex rounded-full bg-amber-100 px-3 py-1.5 text-xs font-semibold text-amber-700">
                     Menunggu ACC Admin
@@ -238,9 +417,6 @@ return $value;
     </div>
 
 
-    {{-- ============================================================
-         PENDING / REJECTED REQUEST
-    ============================================================ --}}
     @if($pendingProfileUpdateRequest)
     <section class="overflow-hidden rounded-2xl border border-amber-200 bg-white shadow-sm">
         <div class="border-b border-amber-200 bg-amber-50 px-5 py-4 sm:px-6">
@@ -307,7 +483,7 @@ return $value;
                         $pendingProfileUpdateRequest
                     ) }}"
                     alt="Pas foto baru"
-                    class="h-44 w-36 rounded-xl border border-blue-200 object-cover shadow-sm">
+                    class="simi-pending-profile-photo rounded-xl border border-blue-200 shadow-sm">
             </div>
             @endif
 
@@ -339,9 +515,7 @@ return $value;
     @endif
 
 
-    {{-- ============================================================
-         FORM PENGAJUAN PERUBAHAN
-    ============================================================ --}}
+
     <form
         method="POST"
         action="{{ route('profile.update') }}"
@@ -355,7 +529,7 @@ return $value;
             @disabled($hasPending)
             class="space-y-6 {{ $hasPending ? 'opacity-60' : '' }}">
 
-            {{-- IDENTITAS --}}
+
             <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-200 bg-slate-50/70 px-5 py-4 sm:px-6">
                     <h2 class="font-semibold text-slate-800">
@@ -512,7 +686,7 @@ return $value;
             </section>
 
 
-            {{-- BIODATA --}}
+
             <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-200 bg-slate-50/70 px-5 py-4 sm:px-6">
                     <h2 class="font-semibold text-slate-800">
@@ -643,7 +817,7 @@ return $value;
             </section>
 
 
-            {{-- SIP --}}
+
             <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-200 bg-slate-50/70 px-5 py-4 sm:px-6">
                     <h2 class="font-semibold text-slate-800">
@@ -705,7 +879,7 @@ return $value;
             </section>
 
 
-            {{-- PAS FOTO --}}
+
             <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-200 bg-slate-50/70 px-5 py-4 sm:px-6">
                     <h2 class="font-semibold text-slate-800">
@@ -718,34 +892,17 @@ return $value;
                 </div>
 
                 <div class="p-5 sm:p-6">
-                    <input
-                        id="formal_photo"
-                        type="file"
-                        name="formal_photo"
-                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                        class="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100">
-
-                    <p class="mt-2 text-xs text-slate-500">
-                        JPG/JPEG/PNG/WEBP, maksimal 2 MB.
-                    </p>
-
-                    <div
-                        id="photo-preview-wrap"
-                        class="mt-4 hidden">
-                        <p class="mb-2 text-xs font-medium text-slate-500">
-                            Preview Foto Baru
-                        </p>
-
-                        <img
-                            id="photo-preview"
-                            class="h-44 w-36 rounded-xl border border-blue-200 object-cover shadow-sm"
-                            alt="Preview pas foto">
-                    </div>
+                    <x-profile-photo-cropper
+                        input-id="formal_photo"
+                        input-name="formal_photo"
+                        :required="false"
+                        label="Pilih Foto Baru"
+                        help="Kosongkan jika tidak ingin mengganti foto. Jika memilih foto, geser dan zoom sampai wajah pas di kotak 1:1. Foto baru tetap menunggu ACC Admin." />
                 </div>
             </section>
 
 
-            {{-- REKENING --}}
+
             <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <div class="border-b border-slate-200 bg-slate-50/70 px-5 py-4 sm:px-6">
                     <h2 class="font-semibold text-slate-800">
@@ -825,9 +982,7 @@ return $value;
     @endif
 
 
-    {{-- ============================================================
-         PASSWORD — LANGSUNG, TANPA ACC ADMIN
-    ============================================================ --}}
+
     <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 bg-slate-50/70 px-5 py-4 sm:px-6">
             <h2 class="font-semibold text-slate-800">
@@ -930,32 +1085,6 @@ return $value;
             domicileAddress.focus();
         });
 
-        const photoInput = document.getElementById('formal_photo');
-        const photoPreviewWrap = document.getElementById('photo-preview-wrap');
-        const photoPreview = document.getElementById('photo-preview');
-
-        photoInput?.addEventListener('change', function() {
-            const file = this.files?.[0];
-
-            if (!file) {
-                photoPreviewWrap?.classList.add('hidden');
-                photoPreview?.removeAttribute('src');
-                return;
-            }
-
-            const reader = new FileReader();
-
-            reader.onload = function(event) {
-                if (!photoPreview || !photoPreviewWrap) {
-                    return;
-                }
-
-                photoPreview.src = event.target.result;
-                photoPreviewWrap.classList.remove('hidden');
-            };
-
-            reader.readAsDataURL(file);
-        });
     });
 </script>
 @endif

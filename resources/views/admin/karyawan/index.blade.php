@@ -8,7 +8,7 @@
 
 <div class="space-y-6">
 
-    {{-- Header --}}
+
     <div
         class="flex flex-col gap-4
                sm:flex-row sm:items-center
@@ -39,17 +39,17 @@
     </div>
 
 
-    {{-- Toast success / error --}}
+
     <x-toast-notification />
 
 
-    {{-- Card --}}
+
     <div
         class="overflow-hidden rounded-xl
                border border-slate-200
                bg-white shadow-sm">
 
-        {{-- Search --}}
+
         <div class="border-b border-slate-200 p-5">
 
             <form
@@ -162,20 +162,22 @@
                         </td>
 
 
-                        {{-- Employee --}}
+
                         <td class="px-6 py-4">
 
                             <div class="flex items-center gap-3">
 
+                                @if($item->formal_photo_path)
+                                <img
+                                    src="{{ route('admin.karyawan.photo', $item) }}"
+                                    alt="Foto {{ $item->name }}"
+                                    class="h-10 w-10 shrink-0 rounded-full border border-slate-200 bg-white object-cover">
+                                @else
                                 <div
-                                    class="flex h-10 w-10
-                                               items-center justify-center
-                                               rounded-full bg-blue-100
-                                               font-semibold text-blue-700">
-                                    {{ strtoupper(
-                                            substr($item->name, 0, 1)
-                                        ) }}
+                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
+                                    {{ strtoupper(substr($item->name, 0, 1)) }}
                                 </div>
+                                @endif
 
 
                                 <div>
@@ -221,7 +223,7 @@
                         </td>
 
 
-                        {{-- Join Date --}}
+
                         <td class="whitespace-nowrap px-6 py-4">
 
                             @if($item->join_date)
@@ -253,7 +255,7 @@
                         </td>
 
 
-                        {{-- Verifikasi --}}
+
                         <td class="whitespace-nowrap px-6 py-4">
 
                             @if($item->role !== 'karyawan')
@@ -292,7 +294,7 @@
                         </td>
 
 
-                        {{-- Status --}}
+
                         <td class="whitespace-nowrap px-6 py-4">
 
                             @if($item->is_active)
@@ -318,7 +320,7 @@
                         </td>
 
 
-                        {{-- Action --}}
+
                         <td class="whitespace-nowrap px-6 py-4 text-right">
 
                             <div class="flex justify-end gap-2">
@@ -433,10 +435,6 @@
 </div>
 
 
-
-{{-- ============================================================
-    POPUP VERIFIKASI KARYAWAN
-============================================================ --}}
 <div id="verificationModal" class="fixed inset-0 z-[100] hidden overflow-y-auto overscroll-contain p-2 sm:p-4">
 
     <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="closeVerificationModal()"></div>
@@ -561,9 +559,6 @@
 </div>
 
 
-{{-- ============================================================
-    POPUP KONFIRMASI ACC
-============================================================ --}}
 <div id="approveModal" class="fixed inset-0 z-[110] hidden overflow-y-auto overscroll-contain p-3 sm:p-4">
 
     <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="closeApproveModal()"></div>

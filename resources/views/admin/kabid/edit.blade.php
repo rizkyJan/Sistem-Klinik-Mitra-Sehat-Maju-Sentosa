@@ -42,7 +42,6 @@
         @csrf
         @method('PUT')
 
-        {-- IDENTITAS & KEPEGAWAIAN --}
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Identitas & Kepegawaian</h2>
@@ -183,7 +182,6 @@
             </div>
         </section>
 
-        {-- BIODATA --}
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Biodata Pribadi</h2>
@@ -298,7 +296,6 @@
             </div>
         </section>
 
-        {-- SIP --}
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Surat Izin Praktik (SIP)</h2>
@@ -355,7 +352,6 @@
             </div>
         </section>
 
-        {-- FOTO & REKENING --}
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Pas Foto & Rekening</h2>
@@ -373,7 +369,7 @@
                         <img
                             src="{{ route('admin.kabid.photo', $kabid) }}"
                             alt="Pas foto {{ $kabid->name }}"
-                            class="h-24 w-20 rounded-lg border border-slate-200 bg-white object-cover">
+                            class="h-24 w-24 rounded-xl border border-slate-200 bg-white object-cover object-center">
                         <div>
                             <p class="text-sm font-semibold text-slate-700">Pas foto saat ini</p>
                             <p class="mt-1 text-xs text-slate-500">
@@ -394,23 +390,12 @@
                     @endif
 
 
-                    <label for="formal_photo" class="mb-2 block text-sm font-medium text-slate-700">
-                        Ganti Pas Foto
-                    </label>
-                    <input
-                        id="formal_photo"
-                        type="file"
-                        name="formal_photo"
-                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-
-                        class="block w-full rounded-lg border border-slate-300 bg-white text-sm text-slate-600 file:mr-4 file:border-0 file:bg-slate-100 file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-slate-700 hover:file:bg-slate-200">
-                    <p class="mt-2 text-xs text-slate-400">JPG/JPEG/PNG/WEBP, maksimal 2 MB.</p>
-                    @error('formal_photo')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
-
-                    <div id="newPhotoPreviewWrap" class="mt-4 hidden">
-                        <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Preview foto baru</p>
-                        <img id="newPhotoPreview" alt="Preview pas foto" class="h-32 w-28 rounded-lg border border-slate-200 object-cover">
-                    </div>
+                    <x-profile-photo-cropper
+                        input-id="formal_photo"
+                        input-name="formal_photo"
+                        :required="blank($kabid->formal_photo_path)"
+                        label="Ganti Pas Foto"
+                        help="Kosongkan jika tidak ingin mengganti foto. Jika memilih foto baru, geser dan zoom sampai wajah pas di kotak 1:1." />
                 </div>
 
                 <div>
@@ -463,7 +448,6 @@
             </div>
         </section>
 
-        {-- PASSWORD --}
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Keamanan Akun</h2>
@@ -524,23 +508,6 @@
         copyButton?.addEventListener('click', function() {
             domicileAddress.value = ktpAddress.value;
             domicileAddress.focus();
-        });
-
-        const photoInput = document.getElementById('formal_photo');
-        const previewWrap = document.getElementById('newPhotoPreviewWrap');
-        const preview = document.getElementById('newPhotoPreview');
-
-        photoInput?.addEventListener('change', function() {
-            const file = this.files?.[0];
-
-            if (!file) {
-                previewWrap.classList.add('hidden');
-                preview.removeAttribute('src');
-                return;
-            }
-
-            preview.src = URL.createObjectURL(file);
-            previewWrap.classList.remove('hidden');
         });
 
         const digitsOnly = function(input, maxLength) {
