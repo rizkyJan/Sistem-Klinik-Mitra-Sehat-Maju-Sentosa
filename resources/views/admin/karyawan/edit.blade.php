@@ -42,7 +42,6 @@
         @csrf
         @method('PUT')
 
-        {-- IDENTITAS & KEPEGAWAIAN --}
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Identitas & Kepegawaian</h2>
@@ -452,7 +451,6 @@
             </div>
         </section>
 
-        {-- PASSWORD --}
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Keamanan Akun</h2>
