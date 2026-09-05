@@ -33,6 +33,10 @@
     </div>
     @endif
 
+    <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">
+        Untuk akun Admin/Super Admin, NIP, NIK KTP, WhatsApp, Bidang, tanggal mulai kerja, biodata, SIP, foto, dan rekening bersifat opsional. Yang wajib hanya nama, email, status akun, serta password saat membuat akun baru.
+    </div>
+
     <form
         action="{{ route('admin.admins.update', $adminUser) }}"
         method="POST"
@@ -46,7 +50,7 @@
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Identitas & Kepegawaian</h2>
                 <p class="mt-1 text-sm text-slate-500">
-                    NIP adalah ID internal Administrator. NIK KTP adalah nomor identitas resmi 16 digit.
+                    Nama dan email adalah identitas utama akun. Data kepegawaian di bawah ini bersifat opsional untuk Admin/Super Admin.
                 </p>
             </div>
 
@@ -67,7 +71,7 @@
 
                 <div>
                     <label for="nip" class="mb-2 block text-sm font-medium text-slate-700">
-                        NIP / ID Pegawai <span class="text-red-500">*</span>
+                        NIP / ID Pegawai
                     </label>
                     <input
                         id="nip"
@@ -75,7 +79,6 @@
                         name="nip"
                         value="{{ old('nip', $adminUser->nip ?? $adminUser->nik) }}"
                         maxlength="50"
-                        required
                         placeholder="Contoh: MSMS001"
                         class="w-full rounded-lg border-slate-300">
                     <p class="mt-1 text-xs text-slate-400">Tetap disinkronkan ke kolom ID lama agar fitur lama tetap kompatibel.</p>
@@ -84,7 +87,7 @@
 
                 <div>
                     <label for="nik_ktp" class="mb-2 block text-sm font-medium text-slate-700">
-                        NIK KTP <span class="text-red-500">*</span>
+                        NIK KTP
                     </label>
                     <input
                         id="nik_ktp"
@@ -94,7 +97,6 @@
                         value="{{ old('nik_ktp', $adminUser->nik_ktp) }}"
                         minlength="16"
                         maxlength="16"
-                        required
                         placeholder="16 digit NIK KTP"
                         class="w-full rounded-lg border-slate-300">
                     @error('nik_ktp')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
@@ -116,14 +118,13 @@
 
                 <div>
                     <label for="whatsapp" class="mb-2 block text-sm font-medium text-slate-700">
-                        WhatsApp <span class="text-red-500">*</span>
+                        WhatsApp
                     </label>
                     <input
                         id="whatsapp"
                         type="text"
                         name="whatsapp"
                         value="{{ old('whatsapp', $adminUser->whatsapp) }}"
-                        required
                         placeholder="Contoh: 081234567890"
                         class="w-full rounded-lg border-slate-300">
                     @error('whatsapp')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
@@ -131,12 +132,11 @@
 
                 <div>
                     <label for="department_id" class="mb-2 block text-sm font-medium text-slate-700">
-                        Bidang <span class="text-red-500">*</span>
+                        Bidang
                     </label>
                     <select
                         id="department_id"
                         name="department_id"
-                        required
                         class="w-full rounded-lg border-slate-300">
                         <option value="">-- Pilih Bidang --</option>
                         @foreach($departments as $department)
@@ -153,7 +153,7 @@
 
                 <div>
                     <label for="join_date" class="mb-2 block text-sm font-medium text-slate-700">
-                        Tanggal Mulai Kerja <span class="text-red-500">*</span>
+                        Tanggal Mulai Kerja
                     </label>
                     <input
                         id="join_date"
@@ -161,7 +161,6 @@
                         name="join_date"
                         max="{{ now()->format('Y-m-d') }}"
                         value="{{ old('join_date', $adminUser->join_date?->format('Y-m-d')) }}"
-                        required
                         class="w-full rounded-lg border-slate-300">
                     @error('join_date')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
@@ -182,32 +181,32 @@
             </div>
         </section>
 
+
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Biodata Pribadi</h2>
                 <p class="mt-1 text-sm text-slate-500">
-                    Data administratif sesuai identitas Administrator.
+                    Opsional. Isi hanya jika data pribadi Administrator memang perlu dicatat.
                 </p>
             </div>
 
             <div class="grid grid-cols-1 gap-5 p-5 sm:p-6 md:grid-cols-2">
                 <div>
                     <label for="birth_place" class="mb-2 block text-sm font-medium text-slate-700">
-                        Tempat Lahir <span class="text-red-500">*</span>
+                        Tempat Lahir
                     </label>
                     <input
                         id="birth_place"
                         type="text"
                         name="birth_place"
                         value="{{ old('birth_place', $adminUser->birth_place) }}"
-                        required
                         class="w-full rounded-lg border-slate-300">
                     @error('birth_place')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
                     <label for="birth_date" class="mb-2 block text-sm font-medium text-slate-700">
-                        Tanggal Lahir <span class="text-red-500">*</span>
+                        Tanggal Lahir
                     </label>
                     <input
                         id="birth_date"
@@ -215,19 +214,17 @@
                         name="birth_date"
                         max="{{ now()->subDay()->format('Y-m-d') }}"
                         value="{{ old('birth_date', $adminUser->birth_date?->format('Y-m-d')) }}"
-                        required
                         class="w-full rounded-lg border-slate-300">
                     @error('birth_date')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
 
                 <div>
                     <label for="blood_type" class="mb-2 block text-sm font-medium text-slate-700">
-                        Golongan Darah <span class="text-red-500">*</span>
+                        Golongan Darah
                     </label>
                     <select
                         id="blood_type"
                         name="blood_type"
-                        required
                         class="w-full rounded-lg border-slate-300">
                         <option value="">-- Pilih --</option>
                         @foreach(['A', 'B', 'AB', 'O'] as $bloodType)
@@ -241,12 +238,11 @@
 
                 <div>
                     <label for="religion" class="mb-2 block text-sm font-medium text-slate-700">
-                        Agama <span class="text-red-500">*</span>
+                        Agama
                     </label>
                     <select
                         id="religion"
                         name="religion"
-                        required
                         class="w-full rounded-lg border-slate-300">
                         <option value="">-- Pilih Agama --</option>
                         @foreach(['Islam', 'Kristen Protestan', 'Katolik', 'Hindu', 'Buddha', 'Konghucu', 'Kepercayaan'] as $religion)
@@ -260,13 +256,12 @@
 
                 <div class="md:col-span-2">
                     <label for="ktp_address" class="mb-2 block text-sm font-medium text-slate-700">
-                        Alamat KTP <span class="text-red-500">*</span>
+                        Alamat KTP
                     </label>
                     <textarea
                         id="ktp_address"
                         name="ktp_address"
                         rows="3"
-                        required
                         class="w-full rounded-lg border-slate-300"
                         placeholder="Alamat lengkap sesuai KTP">{{ old('ktp_address', $adminUser->ktp_address) }}</textarea>
                     @error('ktp_address')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
@@ -275,7 +270,7 @@
                 <div class="md:col-span-2">
                     <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
                         <label for="domicile_address" class="block text-sm font-medium text-slate-700">
-                            Alamat Domisili <span class="text-red-500">*</span>
+                            Alamat Domisili
                         </label>
                         <button
                             type="button"
@@ -288,20 +283,17 @@
                         id="domicile_address"
                         name="domicile_address"
                         rows="3"
-                        required
                         class="w-full rounded-lg border-slate-300"
                         placeholder="Alamat tempat tinggal saat ini">{{ old('domicile_address', $adminUser->domicile_address) }}</textarea>
                     @error('domicile_address')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
             </div>
         </section>
-
-        {{-- SIP --}}
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Surat Izin Praktik (SIP)</h2>
                 <p class="mt-1 text-sm text-slate-500">
-                    Opsional. Isi bagian ini hanya jika Administrator mempunyai SIP.
+                    Opsional. Isi hanya jika Administrator mempunyai SIP.
                 </p>
             </div>
 
@@ -352,8 +344,6 @@
                 </div>
             </div>
         </section>
-
-        {{-- FOTO & REKENING --}}
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Pas Foto & Rekening</h2>
@@ -364,7 +354,7 @@
 
             <div class="grid grid-cols-1 gap-6 p-5 sm:p-6 lg:grid-cols-2">
                 <div>
-                    <h3 class="mb-3 text-sm font-semibold text-slate-700">Pas Foto Formal</h3>
+                    <h3 class="mb-3 text-sm font-semibold text-slate-700">Pas Foto Formal (Opsional)</h3>
 
                     @if($adminUser->formal_photo_path)
                     <div class="mb-4 flex items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -395,26 +385,26 @@
                     <x-profile-photo-cropper
                         input-id="formal_photo"
                         input-name="formal_photo"
-                        :required="blank($adminUser->formal_photo_path)"
+                        :required="false"
                         label="{{ $adminUser->formal_photo_path ? 'Ganti Pas Foto' : 'Upload Pas Foto' }}"
                         help="Pilih foto baru bila ingin mengganti. Geser dan zoom sampai bagian yang diinginkan pas di kotak 1:1." />
                 </div>
 
                 <div>
-                    <h3 class="mb-3 text-sm font-semibold text-slate-700">Rekening Fee/Reimburse</h3>
+                    <h3 class="mb-3 text-sm font-semibold text-slate-700">Rekening Fee/Reimburse (Opsional)</h3>
 
                     <div class="space-y-4">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-slate-700">Bank</label>
                             <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
                                 <p class="font-semibold text-emerald-800">Bank Syariah Indonesia (BSI)</p>
-                                <p class="mt-1 text-xs text-emerald-600">Bank dikunci oleh sistem dan tidak dapat dipilih.</p>
+                                <p class="mt-1 text-xs text-emerald-600">Jika rekening diisi, bank menggunakan Bank Syariah Indonesia (BSI).</p>
                             </div>
                         </div>
 
                         <div>
                             <label for="bank_account_number" class="mb-2 block text-sm font-medium text-slate-700">
-                                Nomor Rekening BSI <span class="text-red-500">*</span>
+                                Nomor Rekening BSI
                             </label>
                             <input
                                 id="bank_account_number"
@@ -424,7 +414,6 @@
                                 value="{{ old('bank_account_number', $adminUser->bank_account_number) }}"
                                 minlength="8"
                                 maxlength="20"
-                                required
                                 placeholder="Nomor rekening BSI"
                                 class="w-full rounded-lg border-slate-300">
                             @error('bank_account_number')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
@@ -432,7 +421,7 @@
 
                         <div>
                             <label for="bank_account_name" class="mb-2 block text-sm font-medium text-slate-700">
-                                Nama Pemilik Rekening <span class="text-red-500">*</span>
+                                Nama Pemilik Rekening
                             </label>
                             <input
                                 id="bank_account_name"
@@ -440,7 +429,6 @@
                                 name="bank_account_name"
                                 value="{{ old('bank_account_name', $adminUser->bank_account_name) }}"
                                 maxlength="150"
-                                required
                                 placeholder="Sesuai nama pada rekening BSI"
                                 class="w-full rounded-lg border-slate-300">
                             @error('bank_account_name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
@@ -449,8 +437,6 @@
                 </div>
             </div>
         </section>
-
-        {{-- PASSWORD --}}
         <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-5 py-4 sm:px-6">
                 <h2 class="font-semibold text-slate-800">Keamanan Akun</h2>

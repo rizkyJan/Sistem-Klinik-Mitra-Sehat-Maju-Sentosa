@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\User;
 use Illuminate\Database\QueryException;
-use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,7 +36,7 @@ class AdminUserController extends Controller
                         ->orWhere('bank_account_number', 'like', '%' . $search . '%')
                         ->orWhereHas(
                             'department',
-                            fn($query) => $query->where('name', 'like', '%' . $search . '%')
+                            fn ($query) => $query->where('name', 'like', '%' . $search . '%')
                         );
                 });
             })
@@ -65,32 +64,36 @@ class AdminUserController extends Controller
             $this->messages()
         );
 
-        $photoPath = $request->file('formal_photo')
-            ->store('admin-photos', 'local');
+        $photoPath = null;
+
+        if ($request->hasFile('formal_photo')) {
+            $photoPath = $request->file('formal_photo')
+                ->store('admin-photos', 'local');
+        }
 
         try {
             User::create([
                 'name' => $validated['name'],
-                'nik' => $validated['nip'],
-                'nip' => $validated['nip'],
-                'nik_ktp' => $validated['nik_ktp'],
+                'nik' => $validated['nip'] ?? null,
+                'nip' => $validated['nip'] ?? null,
+                'nik_ktp' => $validated['nik_ktp'] ?? null,
                 'email' => strtolower($validated['email']),
-                'whatsapp' => $validated['whatsapp'],
-                'join_date' => $validated['join_date'],
-                'department_id' => $validated['department_id'],
-                'birth_place' => $validated['birth_place'],
-                'birth_date' => $validated['birth_date'],
-                'ktp_address' => $validated['ktp_address'],
-                'domicile_address' => $validated['domicile_address'],
-                'blood_type' => $validated['blood_type'],
-                'religion' => $validated['religion'],
+                'whatsapp' => $validated['whatsapp'] ?? null,
+                'join_date' => $validated['join_date'] ?? null,
+                'department_id' => $validated['department_id'] ?? null,
+                'birth_place' => $validated['birth_place'] ?? null,
+                'birth_date' => $validated['birth_date'] ?? null,
+                'ktp_address' => $validated['ktp_address'] ?? null,
+                'domicile_address' => $validated['domicile_address'] ?? null,
+                'blood_type' => $validated['blood_type'] ?? null,
+                'religion' => $validated['religion'] ?? null,
                 'sip_number' => $validated['sip_number'] ?? null,
                 'sip_valid_from' => $validated['sip_valid_from'] ?? null,
                 'sip_valid_until' => $validated['sip_valid_until'] ?? null,
                 'formal_photo_path' => $photoPath,
                 'bank_name' => User::BANK_BSI,
-                'bank_account_number' => $validated['bank_account_number'],
-                'bank_account_name' => $validated['bank_account_name'],
+                'bank_account_number' => $validated['bank_account_number'] ?? null,
+                'bank_account_name' => $validated['bank_account_name'] ?? null,
                 'password' => Hash::make($validated['password']),
                 'role' => 'admin',
                 'is_active' => (bool) $validated['is_active'],
@@ -100,13 +103,16 @@ class AdminUserController extends Controller
                 'profile_completed_at' => now(),
             ]);
         } catch (\Throwable $exception) {
-            Storage::disk('local')->delete($photoPath);
+            if ($photoPath) {
+                Storage::disk('local')->delete($photoPath);
+            }
+
             throw $exception;
         }
 
         return redirect()
             ->route('admin.admins.index')
-            ->with('success', 'Data Admin berhasil ditambahkan lengkap.');
+            ->with('success', 'Data Admin berhasil ditambahkan.');
     }
 
     public function edit(User $adminUser): View
@@ -153,25 +159,25 @@ class AdminUserController extends Controller
 
         $data = [
             'name' => $validated['name'],
-            'nik' => $validated['nip'],
-            'nip' => $validated['nip'],
-            'nik_ktp' => $validated['nik_ktp'],
+            'nik' => $validated['nip'] ?? null,
+            'nip' => $validated['nip'] ?? null,
+            'nik_ktp' => $validated['nik_ktp'] ?? null,
             'email' => strtolower($validated['email']),
-            'whatsapp' => $validated['whatsapp'],
-            'join_date' => $validated['join_date'],
-            'department_id' => $validated['department_id'],
-            'birth_place' => $validated['birth_place'],
-            'birth_date' => $validated['birth_date'],
-            'ktp_address' => $validated['ktp_address'],
-            'domicile_address' => $validated['domicile_address'],
-            'blood_type' => $validated['blood_type'],
-            'religion' => $validated['religion'],
+            'whatsapp' => $validated['whatsapp'] ?? null,
+            'join_date' => $validated['join_date'] ?? null,
+            'department_id' => $validated['department_id'] ?? null,
+            'birth_place' => $validated['birth_place'] ?? null,
+            'birth_date' => $validated['birth_date'] ?? null,
+            'ktp_address' => $validated['ktp_address'] ?? null,
+            'domicile_address' => $validated['domicile_address'] ?? null,
+            'blood_type' => $validated['blood_type'] ?? null,
+            'religion' => $validated['religion'] ?? null,
             'sip_number' => $validated['sip_number'] ?? null,
             'sip_valid_from' => $validated['sip_valid_from'] ?? null,
             'sip_valid_until' => $validated['sip_valid_until'] ?? null,
             'bank_name' => User::BANK_BSI,
-            'bank_account_number' => $validated['bank_account_number'],
-            'bank_account_name' => $validated['bank_account_name'],
+            'bank_account_number' => $validated['bank_account_number'] ?? null,
+            'bank_account_name' => $validated['bank_account_name'] ?? null,
             'role' => 'admin',
             'is_active' => (bool) $validated['is_active'],
             'approval_status' => 'approved',
@@ -254,7 +260,6 @@ class AdminUserController extends Controller
     {
         $this->ensureAdmin($adminUser);
 
-        /** @var FilesystemAdapter $disk */
         $disk = Storage::disk('local');
 
         abort_unless(
@@ -280,7 +285,7 @@ class AdminUserController extends Controller
         return [
             'name' => ['required', 'string', 'max:255'],
             'nip' => [
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 $ignoreId
@@ -291,7 +296,7 @@ class AdminUserController extends Controller
                     : Rule::unique('users', 'nik'),
             ],
             'nik_ktp' => [
-                'required',
+                'nullable',
                 'string',
                 'regex:/^[0-9]{16}$/',
                 $ignoreId
@@ -306,20 +311,20 @@ class AdminUserController extends Controller
                     ? Rule::unique('users', 'email')->ignore($ignoreId)
                     : Rule::unique('users', 'email'),
             ],
-            'whatsapp' => ['required', 'string', 'max:20'],
-            'join_date' => ['required', 'date', 'before_or_equal:today'],
+            'whatsapp' => ['nullable', 'string', 'max:20'],
+            'join_date' => ['nullable', 'date', 'before_or_equal:today'],
             'department_id' => [
-                'required',
+                'nullable',
                 Rule::exists('departments', 'id')
-                    ->where(fn($query) => $query->where('is_active', true)),
+                    ->where(fn ($query) => $query->where('is_active', true)),
             ],
-            'birth_place' => ['required', 'string', 'max:100'],
-            'birth_date' => ['required', 'date', 'before:today'],
-            'ktp_address' => ['required', 'string', 'max:3000'],
-            'domicile_address' => ['required', 'string', 'max:3000'],
-            'blood_type' => ['required', Rule::in(['A', 'B', 'AB', 'O'])],
+            'birth_place' => ['nullable', 'string', 'max:100'],
+            'birth_date' => ['nullable', 'date', 'before:today'],
+            'ktp_address' => ['nullable', 'string', 'max:3000'],
+            'domicile_address' => ['nullable', 'string', 'max:3000'],
+            'blood_type' => ['nullable', Rule::in(['A', 'B', 'AB', 'O'])],
             'religion' => [
-                'required',
+                'nullable',
                 Rule::in([
                     'Islam',
                     'Kristen Protestan',
@@ -348,19 +353,24 @@ class AdminUserController extends Controller
                 'after_or_equal:sip_valid_from',
             ],
             'formal_photo' => [
-                Rule::requiredIf($adminUser && blank($adminUser->formal_photo_path)),
-                $adminUser ? 'nullable' : 'required',
+                'nullable',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
                 'dimensions:ratio=1/1',
                 'max:2048',
             ],
             'bank_account_number' => [
-                'required',
+                'nullable',
+                'required_with:bank_account_name',
                 'string',
                 'regex:/^[0-9]{8,20}$/',
             ],
-            'bank_account_name' => ['required', 'string', 'max:150'],
+            'bank_account_name' => [
+                'nullable',
+                'required_with:bank_account_number',
+                'string',
+                'max:150',
+            ],
             'password' => [
                 $adminUser ? 'nullable' : 'required',
                 'string',
@@ -375,40 +385,26 @@ class AdminUserController extends Controller
     {
         return [
             'name.required' => 'Nama Admin wajib diisi.',
-            'nip.required' => 'NIP / ID Pegawai wajib diisi.',
             'nip.unique' => 'NIP / ID Pegawai sudah digunakan.',
-            'nik_ktp.required' => 'NIK KTP wajib diisi.',
-            'nik_ktp.regex' => 'NIK KTP harus tepat 16 digit angka.',
+            'nik_ktp.regex' => 'NIK KTP harus tepat 16 digit angka jika diisi.',
             'nik_ktp.unique' => 'NIK KTP sudah digunakan.',
             'email.required' => 'Email wajib diisi.',
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah digunakan.',
-            'whatsapp.required' => 'Nomor WhatsApp wajib diisi.',
-            'join_date.required' => 'Tanggal mulai kerja wajib diisi.',
             'join_date.before_or_equal' => 'Tanggal mulai kerja tidak boleh melewati hari ini.',
-            'department_id.required' => 'Bidang wajib dipilih.',
             'department_id.exists' => 'Bidang yang dipilih tidak tersedia.',
-            'birth_place.required' => 'Tempat lahir wajib diisi.',
-            'birth_date.required' => 'Tanggal lahir wajib diisi.',
             'birth_date.before' => 'Tanggal lahir harus sebelum hari ini.',
-            'ktp_address.required' => 'Alamat KTP wajib diisi.',
-            'domicile_address.required' => 'Alamat domisili wajib diisi.',
-            'blood_type.required' => 'Golongan darah wajib dipilih.',
-            'religion.required' => 'Agama wajib dipilih.',
             'sip_number.required_with' => 'Nomor SIP wajib diisi jika masa berlaku SIP diisi.',
             'sip_valid_from.required_with' => 'Tanggal mulai SIP wajib diisi jika data SIP digunakan.',
             'sip_valid_until.required_with' => 'Tanggal berakhir SIP wajib diisi jika data SIP digunakan.',
             'sip_valid_until.after_or_equal' => 'Tanggal berakhir SIP tidak boleh sebelum tanggal mulai SIP.',
-            'formal_photo.required' => $adminUser
-                ? 'Pas foto wajib diunggah karena data Admin lama belum memiliki foto.'
-                : 'Pas foto formal wajib diunggah.',
             'formal_photo.image' => 'Pas foto harus berupa file gambar.',
             'formal_photo.mimes' => 'Pas foto harus JPG, JPEG, PNG, atau WEBP.',
             'formal_photo.dimensions' => 'Pas foto harus sudah dicrop menjadi rasio 1:1.',
             'formal_photo.max' => 'Ukuran pas foto maksimal 2 MB.',
-            'bank_account_number.required' => 'Nomor rekening BSI wajib diisi.',
+            'bank_account_number.required_with' => 'Nomor rekening BSI wajib diisi jika nama pemilik rekening diisi.',
             'bank_account_number.regex' => 'Nomor rekening BSI harus berupa 8-20 digit angka.',
-            'bank_account_name.required' => 'Nama pemilik rekening BSI wajib diisi.',
+            'bank_account_name.required_with' => 'Nama pemilik rekening BSI wajib diisi jika nomor rekening diisi.',
             'password.required' => 'Password wajib diisi.',
             'password.min' => 'Password minimal 8 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak sama.',
