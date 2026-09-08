@@ -13,6 +13,8 @@
     'resources/js/app.js'
     ])
 
+    <link rel="stylesheet" href="{{ asset('css/simi-theme.css') }}">
+
     <style>
         @keyframes simiLoginReveal {
             from {
@@ -32,7 +34,7 @@
     </style>
 </head>
 
-<body class="bg-slate-100 antialiased">
+<body class="simi-theme bg-slate-100 antialiased">
 
     @php
     /*

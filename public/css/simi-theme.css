@@ -1,0 +1,333 @@
+/*
+|--------------------------------------------------------------------------
+| SIMI-MS Pastel Gradient Theme
+|--------------------------------------------------------------------------
+| Tampilan saja. File ini tidak mengubah route, form, controller, JavaScript,
+| validasi, role, maupun alur aplikasi.
+|
+| Referensi visual:
+| - Latar peach/pink -> cream -> cyan seperti contoh ImageColorPicker.
+| - Primary action memakai #ED9D99.
+| - Teks pada tombol primary sengaja gelap agar kontras dan mudah dibaca.
+*/
+
+:root {
+    --simi-primary: #ed9d99;
+    --simi-primary-hover: #df8985;
+    --simi-primary-active: #d97f7a;
+    --simi-primary-soft: #fce9e7;
+    --simi-primary-soft-2: #f8d6d3;
+    --simi-primary-border: #efc0bc;
+    --simi-primary-link: #b85f5a;
+    --simi-primary-link-hover: #934743;
+    --simi-primary-ink: #172033;
+
+    --simi-surface: rgba(255, 255, 255, 0.94);
+    --simi-surface-strong: #ffffff;
+    --simi-border: rgba(255, 255, 255, 0.58);
+    --simi-text: #172033;
+    --simi-muted: #64748b;
+    --simi-shadow: 0 16px 44px rgba(90, 55, 66, 0.09);
+}
+
+/* ================================================================
+   BACKGROUND UTAMA
+   Peach -> warm cream -> cyan, plus garis vertikal lembut.
+   ================================================================ */
+body.simi-theme {
+    min-height: 100vh;
+    color: var(--simi-text);
+    background-color: #f7e6dd !important;
+    background-image:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.26) 0%,
+            rgba(255, 255, 255, 0.08) 38%,
+            rgba(255, 255, 255, 0) 70%
+        ),
+        repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.1) 0,
+            rgba(255, 255, 255, 0.1) 127px,
+            rgba(255, 255, 255, 0.34) 127px,
+            rgba(255, 255, 255, 0.34) 128px
+        ),
+        linear-gradient(
+            108deg,
+            #ffd7be 0%,
+            #ffc0ad 22%,
+            #f8ddd3 39%,
+            #f4ece4 50%,
+            #d9f5f3 66%,
+            #b9f1f3 80%,
+            #9cecf2 100%
+        ) !important;
+    background-attachment: fixed !important;
+    background-size: auto, auto, cover !important;
+    background-repeat: no-repeat, repeat, no-repeat !important;
+}
+
+/* Wrapper lama yang punya bg abu-abu tidak menutup gradient utama. */
+body.simi-theme > .min-h-screen {
+    background-color: transparent !important;
+}
+
+/* Konten tetap terbaca pada gradient tanpa mengubah grid/responsiveness. */
+body.simi-theme main {
+    position: relative;
+}
+
+/* ================================================================
+   HEADER / TOP BAR
+   ================================================================ */
+body.simi-theme header {
+    background-color: rgba(255, 255, 255, 0.84) !important;
+    border-color: rgba(148, 163, 184, 0.2) !important;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.62);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    backdrop-filter: blur(16px) saturate(120%);
+}
+
+/* ================================================================
+   SIDEBAR
+   Dibuat light glass agar menyatu dengan contoh pastel, tetapi navigasi,
+   ukuran, posisi, mobile drawer, dan JavaScript sidebar tetap sama.
+   ================================================================ */
+body.simi-theme aside[id$="Sidebar"] {
+    background: rgba(255, 255, 255, 0.86) !important;
+    color: var(--simi-text) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 10px 0 34px rgba(69, 56, 70, 0.08) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(125%);
+    backdrop-filter: blur(22px) saturate(125%);
+}
+
+body.simi-theme aside[id$="Sidebar"] [class~="text-white"] {
+    color: var(--simi-text) !important;
+}
+
+body.simi-theme aside[id$="Sidebar"] [class~="text-slate-300"] {
+    color: #475569 !important;
+}
+
+body.simi-theme aside[id$="Sidebar"] [class~="text-slate-400"],
+body.simi-theme aside[id$="Sidebar"] [class~="text-slate-500"] {
+    color: #64748b !important;
+}
+
+body.simi-theme aside[id$="Sidebar"] [class~="text-blue-400"] {
+    color: var(--simi-primary-link) !important;
+}
+
+body.simi-theme aside[id$="Sidebar"] [class~="border-slate-800"],
+body.simi-theme aside[id$="Sidebar"] [class~="border-slate-700"],
+body.simi-theme aside[id$="Sidebar"] [class~="border-slate-600"] {
+    border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+body.simi-theme aside[id$="Sidebar"] a,
+body.simi-theme aside[id$="Sidebar"] button {
+    transition:
+        background-color 160ms ease,
+        color 160ms ease,
+        border-color 160ms ease,
+        transform 160ms ease;
+}
+
+body.simi-theme aside[id$="Sidebar"] a:hover,
+body.simi-theme aside[id$="Sidebar"] button:hover {
+    color: var(--simi-text) !important;
+}
+
+body.simi-theme aside[id$="Sidebar"] [class~="hover:bg-slate-800"]:hover,
+body.simi-theme aside[id$="Sidebar"] [class~="hover:bg-slate-700"]:hover {
+    background-color: rgba(237, 157, 153, 0.16) !important;
+}
+
+/* ================================================================
+   SURFACE / CARD
+   Tetap putih agar form, tabel, dan informasi mudah dibaca.
+   ================================================================ */
+body.simi-theme main [class~="bg-white"],
+body.simi-theme #loginPanel [class~="bg-white"],
+body.simi-theme > .min-h-screen > [class~="bg-white"] {
+    background-color: var(--simi-surface) !important;
+}
+
+body.simi-theme main [class~="shadow-sm"],
+body.simi-theme #loginPanel [class~="shadow-sm"] {
+    box-shadow: var(--simi-shadow) !important;
+}
+
+/* ================================================================
+   PRIMARY PINK — #ED9D99
+   Teks gelap dipakai karena #ED9D99 + putih terlalu rendah kontrasnya.
+   ================================================================ */
+body.simi-theme [class~="bg-blue-600"],
+body.simi-theme [class~="bg-blue-500"] {
+    background-color: var(--simi-primary) !important;
+    color: var(--simi-primary-ink) !important;
+}
+
+body.simi-theme [class~="bg-blue-700"] {
+    background-color: var(--simi-primary-hover) !important;
+    color: var(--simi-primary-ink) !important;
+}
+
+body.simi-theme [class~="hover:bg-blue-700"]:hover,
+body.simi-theme [class~="hover:bg-blue-600"]:hover {
+    background-color: var(--simi-primary-hover) !important;
+    color: var(--simi-primary-ink) !important;
+}
+
+body.simi-theme [class~="active:bg-blue-700"]:active,
+body.simi-theme [class~="active:bg-blue-800"]:active {
+    background-color: var(--simi-primary-active) !important;
+    color: var(--simi-primary-ink) !important;
+}
+
+/* Primary soft states / info yang sebelumnya biru. */
+body.simi-theme [class~="bg-blue-50"],
+body.simi-theme [class~="bg-blue-50/30"],
+body.simi-theme [class~="bg-blue-50/40"],
+body.simi-theme [class~="bg-blue-50/50"],
+body.simi-theme [class~="bg-blue-50/70"] {
+    background-color: rgba(252, 233, 231, 0.92) !important;
+}
+
+body.simi-theme [class~="bg-blue-100"] {
+    background-color: var(--simi-primary-soft-2) !important;
+}
+
+/* Border primary. */
+body.simi-theme [class~="border-blue-100"] {
+    border-color: #f6d9d6 !important;
+}
+
+body.simi-theme [class~="border-blue-200"] {
+    border-color: var(--simi-primary-border) !important;
+}
+
+body.simi-theme [class~="border-blue-300"] {
+    border-color: #e7aaa6 !important;
+}
+
+body.simi-theme [class~="border-blue-400"],
+body.simi-theme [class~="border-blue-500"] {
+    border-color: #cf746f !important;
+}
+
+body.simi-theme [class~="hover:border-blue-300"]:hover,
+body.simi-theme [class~="hover:border-blue-400"]:hover,
+body.simi-theme [class~="hover:border-blue-500"]:hover {
+    border-color: #cf746f !important;
+}
+
+/* Link/label pink dibuat lebih gelap agar tetap terbaca di atas putih. */
+body.simi-theme [class~="text-blue-400"],
+body.simi-theme [class~="text-blue-500"],
+body.simi-theme [class~="text-blue-600"],
+body.simi-theme [class~="text-blue-700"],
+body.simi-theme [class~="text-blue-800"],
+body.simi-theme [class~="text-blue-900"] {
+    color: var(--simi-primary-link) !important;
+}
+
+body.simi-theme [class~="text-blue-100"] {
+    color: #f8d6d3 !important;
+}
+
+body.simi-theme [class~="hover:text-blue-600"]:hover,
+body.simi-theme [class~="hover:text-blue-700"]:hover,
+body.simi-theme [class~="hover:text-blue-800"]:hover {
+    color: var(--simi-primary-link-hover) !important;
+}
+
+/* Bila background primary dan text-blue berada pada elemen yang sama,
+   utamakan tinta gelap tombol. */
+body.simi-theme [class~="bg-blue-600"][class*="text-blue-"],
+body.simi-theme [class~="bg-blue-700"][class*="text-blue-"] {
+    color: var(--simi-primary-ink) !important;
+}
+
+/* ================================================================
+   FOCUS / RING
+   Fokus keyboard tetap terlihat jelas.
+   ================================================================ */
+body.simi-theme [class~="focus:border-blue-500"]:focus,
+body.simi-theme [class~="focus:border-blue-600"]:focus {
+    border-color: #c96f69 !important;
+}
+
+body.simi-theme [class~="ring-blue-200"],
+body.simi-theme [class~="ring-blue-500"],
+body.simi-theme [class~="focus:ring-blue-500"]:focus,
+body.simi-theme [class~="focus:ring-blue-600"]:focus,
+body.simi-theme [class~="hover:ring-blue-200"]:hover {
+    --tw-ring-color: rgba(184, 95, 90, 0.32) !important;
+}
+
+body.simi-theme [class~="accent-blue-600"] {
+    accent-color: var(--simi-primary-link) !important;
+}
+
+/* ================================================================
+   FORM CONTROL
+   Tidak mengubah ukuran/struktur form, hanya pengalaman visual fokus.
+   ================================================================ */
+body.simi-theme input:not([type="checkbox"]):not([type="radio"]),
+body.simi-theme select,
+body.simi-theme textarea {
+    background-color: rgba(255, 255, 255, 0.92);
+}
+
+body.simi-theme input:not([type="checkbox"]):not([type="radio"]):focus,
+body.simi-theme select:focus,
+body.simi-theme textarea:focus {
+    border-color: #c96f69 !important;
+    --tw-ring-color: rgba(184, 95, 90, 0.25) !important;
+}
+
+/* ================================================================
+   RESPONSIVE / PERFORMANCE
+   Grid, breakpoint, width, sidebar drawer, dan layout Tailwind tidak diubah.
+   Hanya background dibuat sedikit lebih sederhana pada layar kecil.
+   ================================================================ */
+@media (max-width: 640px) {
+    body.simi-theme {
+        background-image:
+            linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.22) 0%,
+                rgba(255, 255, 255, 0) 68%
+            ),
+            repeating-linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0.08) 0,
+                rgba(255, 255, 255, 0.08) 95px,
+                rgba(255, 255, 255, 0.26) 95px,
+                rgba(255, 255, 255, 0.26) 96px
+            ),
+            linear-gradient(
+                145deg,
+                #ffd5bd 0%,
+                #f6c2b7 34%,
+                #edf0e8 58%,
+                #b9eef0 100%
+            ) !important;
+        background-attachment: scroll !important;
+    }
+
+    body.simi-theme aside[id$="Sidebar"] {
+        background: rgba(255, 255, 255, 0.94) !important;
+    }
+}
+
+/* Reduced motion: hormati preferensi user. */
+@media (prefers-reduced-motion: reduce) {
+    body.simi-theme *,
+    body.simi-theme *::before,
+    body.simi-theme *::after {
+        scroll-behavior: auto !important;
+    }
+}

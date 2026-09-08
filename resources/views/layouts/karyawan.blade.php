@@ -27,12 +27,14 @@
     'resources/js/app.js'
     ])
 
+    <link rel="stylesheet" href="{{ asset('css/simi-theme.css') }}">
+
 </head>
 
 
 
 <body
-    class="
+    class="simi-theme 
         overflow-x-hidden
 
         bg-slate-50

@@ -13,9 +13,11 @@
     'resources/css/app.css',
     'resources/js/app.js'
     ])
+
+    <link rel="stylesheet" href="{{ asset('css/simi-theme.css') }}">
 </head>
 
-<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
+<body class="simi-theme min-h-screen bg-slate-50 text-slate-800 antialiased">
     <div class="mx-auto min-h-screen max-w-5xl px-4 py-8 sm:px-6 lg:py-12">
         <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
