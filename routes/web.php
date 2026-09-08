@@ -31,6 +31,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Middleware\ShareKaryawanSidebarCounts;
 use App\Http\Controllers\Admin\EmployeeProfileUpdateRequestController;
 use App\Http\Middleware\ShareAdminProfileUpdateCount;
+use App\Http\Controllers\Admin\HearYouController as AdminHearYouController;
+use App\Http\Controllers\Employee\HearYouController as EmployeeHearYouController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -56,6 +58,27 @@ Route::middleware([
             DashboardController::class,
             'index'
         ])->name('dashboard');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | HEAR YOU
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/hear-you', [
+            AdminHearYouController::class,
+            'index'
+        ])->name('hear-you.index');
+
+        Route::get('/hear-you/{hearYouFeedback}', [
+            AdminHearYouController::class,
+            'show'
+        ])->name('hear-you.show');
+
+        Route::patch('/hear-you/{hearYouFeedback}/response', [
+            AdminHearYouController::class,
+            'respond'
+        ])->name('hear-you.respond');
 
 
         /*
@@ -405,6 +428,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'role:kabid',
+    'hear-you.required',
     ShareKabidSidebarCounts::class,
 ])
     ->prefix('kabid')
@@ -415,6 +439,26 @@ Route::middleware([
             KabidDashboardController::class,
             'index'
         ])->name('dashboard');
+
+        /*
+        |--------------------------------------------------------------------------
+        | HEAR YOU - KABID
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/hear-you', [
+            EmployeeHearYouController::class,
+            'index'
+        ])->name('hear-you.index');
+
+        Route::post('/hear-you', [
+            EmployeeHearYouController::class,
+            'store'
+        ])->name('hear-you.store');
+
+        Route::patch('/hear-you/{hearYouFeedback}/evaluate', [
+            EmployeeHearYouController::class,
+            'evaluate'
+        ])->name('hear-you.evaluate');
 
         Route::get('/notifications/{notification}', [
             NotificationController::class,
@@ -606,6 +650,7 @@ Route::middleware([
 Route::middleware([
     'auth',
     'role:karyawan',
+    'hear-you.required',
     ShareKaryawanSidebarCounts::class,
 ])
     ->prefix('karyawan')
@@ -616,6 +661,26 @@ Route::middleware([
             KaryawanDashboardController::class,
             'index'
         ])->name('dashboard');
+
+        /*
+        |--------------------------------------------------------------------------
+        | HEAR YOU - KARYAWAN
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/hear-you', [
+            EmployeeHearYouController::class,
+            'index'
+        ])->name('hear-you.index');
+
+        Route::post('/hear-you', [
+            EmployeeHearYouController::class,
+            'store'
+        ])->name('hear-you.store');
+
+        Route::patch('/hear-you/{hearYouFeedback}/evaluate', [
+            EmployeeHearYouController::class,
+            'evaluate'
+        ])->name('hear-you.evaluate');
 
         Route::get('/notifications/{notification}', [
             NotificationController::class,

@@ -146,4 +146,20 @@ class User extends Authenticatable
         return $this->hasMany(EmployeeProfileUpdateRequest::class, 'user_id')
             ->where('status', EmployeeProfileUpdateRequest::STATUS_PENDING);
     }
+
+    /**
+     * Aspirasi Hear You yang dibuat oleh user ini.
+     */
+    public function hearYouFeedbacks(): HasMany
+    {
+        return $this->hasMany(HearYouFeedback::class, 'user_id');
+    }
+
+    /**
+     * Hear You yang pernah ditanggapi oleh user ini ketika berperan Admin.
+     */
+    public function respondedHearYouFeedbacks(): HasMany
+    {
+        return $this->hasMany(HearYouFeedback::class, 'responded_by');
+    }
 }

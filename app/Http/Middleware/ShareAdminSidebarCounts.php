@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\HearYouFeedback;
 use App\Models\LeaveRequest;
 use App\Models\Reimbursement;
 use App\Models\User;
@@ -13,80 +14,28 @@ use Symfony\Component\HttpFoundation\Response;
 class ShareAdminSidebarCounts
 {
     /**
-     * Bagikan jumlah notifikasi sidebar ke seluruh view admin.
-     *
-     * Badge yang disediakan:
-     * - $pendingEmployeeVerificationCount
-     * - $pendingKabidVerificationCount
-     * - $pendingLeaveRequestCount
-     * - $pendingReimbursementCount
+     * Bagikan jumlah notifikasi sidebar ke seluruh view Admin.
      */
     public function handle(
         Request $request,
         Closure $next
     ): Response {
-        /*
-        |--------------------------------------------------------------------------
-        | Hanya hitung untuk Admin yang sedang login
-        |--------------------------------------------------------------------------
-        */
         if (
             Auth::check()
-            &&
-            Auth::user()->role === 'admin'
+            && Auth::user()->role === 'admin'
         ) {
-            /*
-            |--------------------------------------------------------------------------
-            | Karyawan yang masih menunggu verifikasi
-            |--------------------------------------------------------------------------
-            |
-            | Contoh:
-            | approval_status = pending
-            |
-            | Jika ada 1 orang -> badge 1
-            | Jika ada 2 orang -> badge 2
-            |
-            */
             $pendingEmployeeVerificationCount = User::query()
                 ->where('role', 'karyawan')
                 ->where('approval_status', 'pending')
                 ->count();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Kabid yang masih menunggu verifikasi
-            |--------------------------------------------------------------------------
-            */
             $pendingKabidVerificationCount = User::query()
                 ->where('role', 'kabid')
                 ->where('approval_status', 'pending')
                 ->count();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Pengajuan perizinan yang masih menunggu keputusan
-            |--------------------------------------------------------------------------
-            */
-            /*
-            |--------------------------------------------------------------------------
-            | Pengajuan cuti yang SUDAH SIAP diproses Admin
-            |--------------------------------------------------------------------------
-            |
-            | Badge Admin tidak lagi menghitung seluruh status pending.
-            |
-            | Yang dihitung hanya:
-            | - Karyawan yang sudah ACC Kabid
-            | - Cuti Kabid sendiri / data legacy (not_required)
-            |
-            | Pengajuan yang masih menunggu Kabid tidak menjadi pekerjaan
-            | Admin sehingga tidak perlu menambah badge Admin.
-            |
-            */
             $pendingLeaveRequestCount = LeaveRequest::query()
-                ->where(
-                    'status',
-                    'pending'
-                )
+                ->where('status', 'pending')
                 ->whereIn(
                     'kabid_status',
                     [
@@ -96,34 +45,33 @@ class ShareAdminSidebarCounts
                 )
                 ->count();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Reimburse pending
-            |--------------------------------------------------------------------------
-            |
-            | Modul reimburse diproses oleh role admin.
-            */
             $pendingReimbursementCount = Reimbursement::query()
                 ->where('status', Reimbursement::STATUS_PENDING)
                 ->count();
 
             /*
-            |--------------------------------------------------------------------------
-            | Share ke seluruh Blade pada request admin ini
-            |--------------------------------------------------------------------------
-            */
+             * Semua Hear You yang belum memperoleh tanggapan Admin.
+             * Badge tidak dibatasi bulan agar aspirasi lama tidak terlupakan.
+             */
+            $pendingHearYouResponseCount = HearYouFeedback::query()
+                ->whereNull('admin_response')
+                ->count();
+
             view()->share([
                 'pendingEmployeeVerificationCount' =>
-                $pendingEmployeeVerificationCount,
+                    $pendingEmployeeVerificationCount,
 
                 'pendingKabidVerificationCount' =>
-                $pendingKabidVerificationCount,
+                    $pendingKabidVerificationCount,
 
                 'pendingLeaveRequestCount' =>
-                $pendingLeaveRequestCount,
+                    $pendingLeaveRequestCount,
 
                 'pendingReimbursementCount' =>
-                $pendingReimbursementCount,
+                    $pendingReimbursementCount,
+
+                'pendingHearYouResponseCount' =>
+                    $pendingHearYouResponseCount,
             ]);
         }
 

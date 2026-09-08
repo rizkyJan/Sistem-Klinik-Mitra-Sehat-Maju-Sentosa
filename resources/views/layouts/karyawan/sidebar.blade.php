@@ -220,6 +220,39 @@
                     Dashboard
                 </span>
             </a>
+
+            <a
+                href="{{ route('karyawan.hear-you.index') }}"
+                onclick="closeKaryawanSidebar()"
+                class="
+                    mt-1 flex items-center gap-3
+                    rounded-lg px-3 py-2.5
+                    text-sm font-medium transition
+                    {{ request()->routeIs('karyawan.hear-you.*')
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}
+                ">
+
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5 shrink-0"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="1.5"
+                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z" />
+                </svg>
+
+                <span class="truncate">
+                    Hear You
+                </span>
+
+                <x-sidebar-notification-badge
+                    :count="$hearYouObligationCount ?? 0" />
+            </a>
         </div>
 
 
