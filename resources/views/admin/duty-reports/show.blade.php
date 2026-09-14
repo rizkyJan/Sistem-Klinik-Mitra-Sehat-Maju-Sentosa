@@ -7,6 +7,11 @@
 @php
 $report = $dutyAssignment->report;
 $status = $dutyAssignment->report_status;
+$assigneeUser = $dutyAssignment->user;
+$bankName = $assigneeUser?->bank_name ?: \App\Models\User::BANK_BSI;
+$bankAccountNumber = trim((string) ($assigneeUser?->bank_account_number ?? ''));
+$bankAccountName = trim((string) ($assigneeUser?->bank_account_name ?? ''));
+$bankAccountComplete = $bankAccountNumber !== '' && $bankAccountName !== '';
 @endphp
 
 <div class="mx-auto max-w-7xl space-y-6">
@@ -277,6 +282,72 @@ $status = $dutyAssignment->report_status;
                 </div>
 
                 <div class="p-5">
+                    @if($status === \App\Models\DutyAssignment::REPORT_VERIFIED)
+                    <div class="mb-5 rounded-xl border border-blue-200 bg-blue-50/70 p-4">
+                        <div class="flex items-start gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M5 10v8m4-8v8m6-8v8m4-8v8M4 21h16M12 3l9 5H3l9-5z" />
+                                </svg>
+                            </div>
+
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <p class="text-sm font-semibold text-blue-950">Rekening Tujuan Transfer Fee</p>
+                                        <p class="mt-0.5 text-xs text-blue-700">
+                                            Data diambil otomatis dari profil aktif {{ $dutyAssignment->assignee_role === 'kabid' ? 'Kabid' : 'Karyawan' }}.
+                                        </p>
+                                    </div>
+
+                                    @if($bankAccountComplete)
+                                    <span class="inline-flex w-fit rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                                        Data rekening tersedia
+                                    </span>
+                                    @endif
+                                </div>
+
+                                @if($bankAccountComplete)
+                                <div class="mt-4 grid gap-3 rounded-lg border border-blue-100 bg-white p-4">
+                                    <div>
+                                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Bank</p>
+                                        <p class="mt-1 text-sm font-semibold text-slate-800">{{ $bankName }}</p>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Nomor Rekening</p>
+                                        <div class="mt-1 flex flex-wrap items-center gap-2">
+                                            <p class="break-all font-mono text-base font-bold tracking-wide text-slate-900">
+                                                {{ $bankAccountNumber }}
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onclick="navigator.clipboard && navigator.clipboard.writeText(@js($bankAccountNumber))"
+                                                class="inline-flex items-center rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">
+                                                Salin
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p class="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Atas Nama</p>
+                                        <p class="mt-1 text-sm font-semibold text-slate-800">{{ $bankAccountName }}</p>
+                                    </div>
+                                </div>
+                                @else
+                                <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                                    <p class="text-sm font-semibold text-amber-900">Data rekening belum lengkap</p>
+                                    <p class="mt-1 text-xs leading-5 text-amber-800">
+                                        Nomor rekening atau nama pemilik rekening pada profil pegawai belum tersedia.
+                                        Periksa data pegawai sebelum melakukan transfer.
+                                    </p>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                     @if($dutyAssignment->fee_status === \App\Models\DutyAssignment::FEE_PAID)
                     <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                         <div class="flex items-start gap-3">
@@ -335,7 +406,9 @@ $status = $dutyAssignment->report_status;
                         action="{{ route('admin.duty-fees.paid', [$dutyLetter, $dutyAssignment]) }}"
                         data-confirm
                         data-confirm-title="Konfirmasi Fee Sudah Dibayar?"
-                        data-confirm-message="Pastikan fee untuk pegawai ini benar-benar sudah dibayarkan. Status pembayaran akan tercatat di akun pegawai."
+                        data-confirm-message="{{ $bankAccountComplete
+                            ? 'Pastikan fee benar-benar sudah ditransfer ke ' . $bankName . ' ' . $bankAccountNumber . ' a.n. ' . $bankAccountName . '. Setelah dikonfirmasi, status pembayaran akan tercatat.'
+                            : 'Pastikan fee untuk pegawai ini benar-benar sudah dibayarkan. Data rekening profil pegawai belum lengkap, jadi periksa kembali sebelum mengonfirmasi.' }}"
                         data-confirm-button="Ya, Sudah Dibayar"
                         data-confirm-tone="primary">
                         @csrf

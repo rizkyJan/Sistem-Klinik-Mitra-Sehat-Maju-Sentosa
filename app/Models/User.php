@@ -162,4 +162,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(HearYouFeedback::class, 'responded_by');
     }
+
+    /** Laporan bulanan bidang yang pernah dikirim user ini sebagai Kabid. */
+    public function submittedDepartmentMonthlyReports(): HasMany
+    {
+        return $this->hasMany(DepartmentMonthlyReport::class, 'submitted_by');
+    }
+
+    /** Laporan bulanan bidang yang pernah diverifikasi user ini sebagai Admin. */
+    public function verifiedDepartmentMonthlyReports(): HasMany
+    {
+        return $this->hasMany(DepartmentMonthlyReport::class, 'verified_by');
+    }
+
+    /** Laporan bulanan bidang yang pernah diedit user ini sebagai Admin. */
+    public function editedDepartmentMonthlyReports(): HasMany
+    {
+        return $this->hasMany(DepartmentMonthlyReport::class, 'admin_edited_by');
+    }
 }

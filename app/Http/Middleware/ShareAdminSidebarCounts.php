@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\DepartmentMonthlyReport;
+use App\Models\DutyAssignment;
 use App\Models\HearYouFeedback;
 use App\Models\LeaveRequest;
 use App\Models\Reimbursement;
@@ -14,7 +16,8 @@ use Symfony\Component\HttpFoundation\Response;
 class ShareAdminSidebarCounts
 {
     /**
-     * Bagikan jumlah notifikasi sidebar ke seluruh view Admin.
+     * Bagikan jumlah notifikasi / pekerjaan yang perlu ditindaklanjuti
+     * ke seluruh view Admin.
      */
     public function handle(
         Request $request,
@@ -57,6 +60,40 @@ class ShareAdminSidebarCounts
                 ->whereNull('admin_response')
                 ->count();
 
+            $pendingMonthlyReportVerificationCount = DepartmentMonthlyReport::query()
+                ->where('status', DepartmentMonthlyReport::STATUS_SUBMITTED)
+                ->count();
+
+            /*
+             * Surat Dinas yang benar-benar membutuhkan tindakan Admin:
+             * 1. laporan pegawai sudah dikirim dan menunggu verifikasi;
+             * 2. laporan sudah diverifikasi tetapi fee belum dikonfirmasi dibayar.
+             *
+             * Dengan model ini badge tidak hilang hanya karena notifikasi dibaca.
+             * Badge baru turun setelah Admin menyelesaikan tindakannya.
+             */
+            $pendingDutyReportVerificationCount = DutyAssignment::query()
+                ->where(
+                    'report_status',
+                    DutyAssignment::REPORT_SUBMITTED
+                )
+                ->count();
+
+            $pendingDutyFeePaymentCount = DutyAssignment::query()
+                ->where(
+                    'report_status',
+                    DutyAssignment::REPORT_VERIFIED
+                )
+                ->where(
+                    'fee_status',
+                    DutyAssignment::FEE_UNPAID
+                )
+                ->count();
+
+            $pendingDutyActionCount =
+                $pendingDutyReportVerificationCount
+                + $pendingDutyFeePaymentCount;
+
             view()->share([
                 'pendingEmployeeVerificationCount' =>
                     $pendingEmployeeVerificationCount,
@@ -72,6 +109,18 @@ class ShareAdminSidebarCounts
 
                 'pendingHearYouResponseCount' =>
                     $pendingHearYouResponseCount,
+
+                'pendingMonthlyReportVerificationCount' =>
+                    $pendingMonthlyReportVerificationCount,
+
+                'pendingDutyReportVerificationCount' =>
+                    $pendingDutyReportVerificationCount,
+
+                'pendingDutyFeePaymentCount' =>
+                    $pendingDutyFeePaymentCount,
+
+                'pendingDutyActionCount' =>
+                    $pendingDutyActionCount,
             ]);
         }
 

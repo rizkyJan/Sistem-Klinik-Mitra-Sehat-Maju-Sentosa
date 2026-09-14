@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DutyAssignment;
 use App\Models\DutyLetter;
 use App\Models\User;
+use App\Services\DutyNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -101,6 +102,21 @@ class DutyFeeController extends Controller
                     'Fee dinas pegawai tersebut sudah pernah dikonfirmasi dibayar.'
                 );
         }
+
+        $dutyAssignment->refresh();
+        $dutyAssignment->loadMissing([
+            'user',
+            'dutyLetter',
+        ]);
+
+        DutyNotificationService::notifyAssignment(
+            $dutyAssignment,
+            'fee_paid',
+            'Fee Dinas Sudah Dibayar',
+            'Fee untuk "'
+                . ($dutyAssignment->dutyLetter?->title ?? 'Surat Dinas')
+                . '" sudah dikonfirmasi dibayar oleh Admin.'
+        );
 
         return redirect()
             ->route(

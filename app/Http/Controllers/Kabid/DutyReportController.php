@@ -8,6 +8,7 @@ use App\Models\DutyLetter;
 use App\Models\DutyReport;
 use App\Models\DutyReportFile;
 use App\Models\User;
+use App\Services\DutyNotificationService;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -62,6 +63,9 @@ class DutyReportController extends Controller
         ]);
 
         $this->ensureReportCanBeWritten($dutyAssignment);
+
+        $wasRevision =
+            $dutyAssignment->report_status === DutyAssignment::REPORT_REVISION;
 
         $existingPhotoCount = $dutyAssignment->report?->files->count() ?? 0;
 
@@ -225,6 +229,29 @@ class DutyReportController extends Controller
 
             throw $exception;
         }
+
+        $dutyAssignment->refresh();
+        $dutyAssignment->loadMissing([
+            'user',
+            'dutyLetter',
+        ]);
+
+        DutyNotificationService::notifyAdmins(
+            $dutyAssignment,
+            $wasRevision ? 'report_resubmitted' : 'report_submitted',
+            $wasRevision
+                ? 'Laporan Dinas Dikirim Ulang'
+                : 'Laporan Dinas Baru',
+            $wasRevision
+                ? $dutyAssignment->assignee_name
+                    . ' telah mengirim ulang laporan untuk "'
+                    . ($dutyAssignment->dutyLetter?->title ?? 'Surat Dinas')
+                    . '" setelah perbaikan.'
+                : $dutyAssignment->assignee_name
+                    . ' telah mengirim laporan untuk "'
+                    . ($dutyAssignment->dutyLetter?->title ?? 'Surat Dinas')
+                    . '" dan menunggu verifikasi Admin.'
+        );
 
         return redirect()
             ->route(

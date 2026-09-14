@@ -224,6 +224,24 @@
                 <x-sidebar-notification-badge
                     :count="$hearYouObligationCount ?? 0" />
             </a>
+
+            <a
+                href="{{ route('kabid.monthly-reports.index') }}"
+                onclick="closeKabidSidebar()"
+                class="
+                    mt-1 flex items-center gap-3
+                    rounded-lg px-3 py-2.5
+                    text-sm font-medium transition
+                    {{ request()->routeIs('kabid.monthly-reports.*')
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}
+                ">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6M7 4h7l3 3v13H7z" />
+                </svg>
+                <span class="truncate">Laporan Bulanan</span>
+                <x-sidebar-notification-badge :count="$monthlyReportObligationCount ?? 0" />
+            </a>
         </div>
 
 
@@ -506,7 +524,7 @@
                     </span>
 
                     <x-sidebar-notification-badge
-                        :count="$unreadDutyNotificationCount ?? 0" />
+                        :count="$dutySidebarCount ?? 0" />
                 </a>
             </div>
         </div>

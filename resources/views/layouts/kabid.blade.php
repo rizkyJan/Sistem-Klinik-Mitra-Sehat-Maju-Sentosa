@@ -104,6 +104,31 @@
                 </div>
                 @endif
 
+                @if(($monthlyReportLocked ?? false) && !request()->routeIs('kabid.monthly-reports.*'))
+                <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 p-5 shadow-sm">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex gap-3">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.74-3L13.74 4a2 2 0 00-3.48 0L3.33 16a2 2 0 001.74 3z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="font-bold text-red-950">Laporan bulanan bidang belum selesai</p>
+                                <p class="mt-1 text-sm leading-relaxed text-red-800">
+                                    {{ ($monthlyReportNeedsRevision ?? false)
+                                        ? 'Admin meminta revisi laporan bulanan bidang Anda. Fitur operasional dikunci sampai revisi dikirim ulang.'
+                                        : 'Laporan bulanan bidang wajib diunggah. Fitur operasional dikunci sampai laporan berhasil dikirim.' }}
+                                </p>
+                            </div>
+                        </div>
+                        <a href="{{ route('kabid.monthly-reports.index') }}" class="inline-flex shrink-0 items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700">
+                            Selesaikan Laporan
+                        </a>
+                    </div>
+                </div>
+                @endif
+
                 @yield('content')
 
             </main>

@@ -7,6 +7,7 @@ use App\Models\DutyAssignment;
 use App\Models\DutyLetter;
 use App\Models\DutyReportFile;
 use App\Models\User;
+use App\Services\DutyNotificationService;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -133,6 +134,21 @@ class DutyReportController extends Controller
             ]);
         });
 
+        $dutyAssignment->refresh();
+        $dutyAssignment->loadMissing([
+            'user',
+            'dutyLetter',
+        ]);
+
+        DutyNotificationService::notifyAssignment(
+            $dutyAssignment,
+            'report_verified',
+            'Laporan Dinas Diverifikasi',
+            'Laporan untuk "'
+                . ($dutyAssignment->dutyLetter?->title ?? 'Surat Dinas')
+                . '" sudah diverifikasi Admin. Fee dinas dapat diproses sesuai ketentuan klinik.'
+        );
+
         return redirect()
             ->route(
                 'admin.duty-reports.show',
@@ -206,6 +222,21 @@ class DutyReportController extends Controller
                 'report_verified_by' => null,
             ]);
         });
+
+        $dutyAssignment->refresh();
+        $dutyAssignment->loadMissing([
+            'user',
+            'dutyLetter',
+        ]);
+
+        DutyNotificationService::notifyAssignment(
+            $dutyAssignment,
+            'report_revision',
+            'Laporan Dinas Perlu Diperbaiki',
+            'Admin meminta perbaikan laporan untuk "'
+                . ($dutyAssignment->dutyLetter?->title ?? 'Surat Dinas')
+                . '". Buka Surat Dinas Saya untuk melihat catatan perbaikan.'
+        );
 
         return redirect()
             ->route(

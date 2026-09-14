@@ -33,6 +33,8 @@ use App\Http\Controllers\Admin\EmployeeProfileUpdateRequestController;
 use App\Http\Middleware\ShareAdminProfileUpdateCount;
 use App\Http\Controllers\Admin\HearYouController as AdminHearYouController;
 use App\Http\Controllers\Employee\HearYouController as EmployeeHearYouController;
+use App\Http\Controllers\Admin\DepartmentMonthlyReportController as AdminDepartmentMonthlyReportController;
+use App\Http\Controllers\Kabid\DepartmentMonthlyReportController as KabidDepartmentMonthlyReportController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -79,6 +81,52 @@ Route::middleware([
             AdminHearYouController::class,
             'respond'
         ])->name('hear-you.respond');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | LAPORAN BULANAN PER BIDANG
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/laporan-bulanan', [
+            AdminDepartmentMonthlyReportController::class,
+            'index'
+        ])->name('monthly-reports.index');
+
+        Route::get('/laporan-bulanan/{monthlyReport}', [
+            AdminDepartmentMonthlyReportController::class,
+            'show'
+        ])->name('monthly-reports.show');
+
+        Route::get('/laporan-bulanan/{monthlyReport}/edit', [
+            AdminDepartmentMonthlyReportController::class,
+            'edit'
+        ])->name('monthly-reports.edit');
+
+        Route::put('/laporan-bulanan/{monthlyReport}', [
+            AdminDepartmentMonthlyReportController::class,
+            'update'
+        ])->name('monthly-reports.update');
+
+        Route::patch('/laporan-bulanan/{monthlyReport}/verify', [
+            AdminDepartmentMonthlyReportController::class,
+            'verify'
+        ])->name('monthly-reports.verify');
+
+        Route::patch('/laporan-bulanan/{monthlyReport}/revision', [
+            AdminDepartmentMonthlyReportController::class,
+            'requestRevision'
+        ])->name('monthly-reports.revision');
+
+        Route::get('/laporan-bulanan/{monthlyReport}/preview', [
+            AdminDepartmentMonthlyReportController::class,
+            'preview'
+        ])->name('monthly-reports.preview');
+
+        Route::get('/laporan-bulanan/{monthlyReport}/download', [
+            AdminDepartmentMonthlyReportController::class,
+            'download'
+        ])->name('monthly-reports.download');
 
 
         /*
@@ -429,6 +477,7 @@ Route::middleware([
     'auth',
     'role:kabid',
     'hear-you.required',
+    'monthly-report.required',
     ShareKabidSidebarCounts::class,
 ])
     ->prefix('kabid')
@@ -459,6 +508,31 @@ Route::middleware([
             EmployeeHearYouController::class,
             'evaluate'
         ])->name('hear-you.evaluate');
+
+        /*
+        |--------------------------------------------------------------------------
+        | LAPORAN BULANAN BIDANG - KABID
+        |--------------------------------------------------------------------------
+        */
+        Route::get('/laporan-bulanan', [
+            KabidDepartmentMonthlyReportController::class,
+            'index'
+        ])->name('monthly-reports.index');
+
+        Route::post('/laporan-bulanan', [
+            KabidDepartmentMonthlyReportController::class,
+            'store'
+        ])->name('monthly-reports.store');
+
+        Route::get('/laporan-bulanan/{monthlyReport}/preview', [
+            KabidDepartmentMonthlyReportController::class,
+            'preview'
+        ])->name('monthly-reports.preview');
+
+        Route::get('/laporan-bulanan/{monthlyReport}/download', [
+            KabidDepartmentMonthlyReportController::class,
+            'download'
+        ])->name('monthly-reports.download');
 
         Route::get('/notifications/{notification}', [
             NotificationController::class,

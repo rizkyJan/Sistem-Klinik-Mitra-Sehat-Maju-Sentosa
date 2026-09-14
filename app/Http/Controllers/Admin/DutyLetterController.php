@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DutyAssignment;
 use App\Models\DutyLetter;
 use App\Models\User;
+use App\Services\DutyNotificationService;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -495,6 +496,19 @@ class DutyLetterController extends Controller
             throw $exception;
         }
 
+        $dutyLetter->loadMissing('assignments.user');
+
+        DutyNotificationService::notifyLetterAssignees(
+            $dutyLetter,
+            'duty_assigned',
+            'Surat Dinas Baru',
+            'Anda mendapat tugas Surat Dinas "'
+                . $dutyLetter->title
+                . '" pada '
+                . ($dutyLetter->event_date?->translatedFormat('d F Y') ?? '-')
+                . '. Buka menu Surat Dinas Saya untuk melihat detail.'
+        );
+
         return redirect()
             ->route(
                 'admin.duty-letters.show',
@@ -817,6 +831,16 @@ class DutyLetterController extends Controller
 
         $oldLetterPath = $dutyLetter->letter_path;
 
+        // Simpan penerima lama agar penerima yang dihapus tetap memperoleh
+        // notifikasi bahwa penugasannya dicabut setelah update berhasil.
+        $previousAssignments = $dutyLetter
+            ->assignments()
+            ->with([
+                'user',
+                'dutyLetter',
+            ])
+            ->get();
+
         try {
             DB::transaction(
                 function () use (
@@ -986,6 +1010,68 @@ class DutyLetterController extends Controller
             );
         }
 
+        $dutyLetter->refresh();
+        $dutyLetter->load('assignments.user');
+
+        $currentUserIds = $dutyLetter->assignments
+            ->pluck('user_id')
+            ->filter()
+            ->map(fn($id) => (int) $id)
+            ->all();
+
+        foreach ($previousAssignments as $previousAssignment) {
+            if (
+                $previousAssignment->user_id !== null
+                && ! in_array(
+                    (int) $previousAssignment->user_id,
+                    $currentUserIds,
+                    true
+                )
+            ) {
+                DutyNotificationService::notifyAssignment(
+                    $previousAssignment,
+                    'duty_removed',
+                    'Penugasan Surat Dinas Dihapus',
+                    'Anda tidak lagi ditugaskan pada Surat Dinas "'
+                        . $dutyLetter->title
+                        . '".'
+                );
+            }
+        }
+
+        $previousUserIds = $previousAssignments
+            ->pluck('user_id')
+            ->filter()
+            ->map(fn($id) => (int) $id)
+            ->all();
+
+        foreach ($dutyLetter->assignments as $currentAssignment) {
+            $isNewAssignee =
+                $currentAssignment->user_id !== null
+                && ! in_array(
+                    (int) $currentAssignment->user_id,
+                    $previousUserIds,
+                    true
+                );
+
+            DutyNotificationService::notifyAssignment(
+                $currentAssignment,
+                $isNewAssignee ? 'duty_assigned' : 'duty_updated',
+                $isNewAssignee
+                    ? 'Surat Dinas Baru'
+                    : 'Surat Dinas Diperbarui',
+                $isNewAssignee
+                    ? 'Anda mendapat tugas Surat Dinas "'
+                        . $dutyLetter->title
+                        . '" pada '
+                        . ($dutyLetter->event_date?->translatedFormat('d F Y') ?? '-')
+                        . '. Buka menu Surat Dinas Saya untuk melihat detail.'
+                    : 'Ada pembaruan pada Surat Dinas "'
+                        . $dutyLetter->title
+                        . '". Silakan buka Surat Dinas Saya untuk melihat data terbaru.'
+            );
+        }
+
         return redirect()
             ->route(
                 'admin.duty-letters.show',
@@ -1115,6 +1201,18 @@ class DutyLetterController extends Controller
                 $exception->getMessage()
             );
         }
+
+        $dutyLetter->refresh();
+        $dutyLetter->load('assignments.user');
+
+        DutyNotificationService::notifyLetterAssignees(
+            $dutyLetter,
+            'duty_cancelled',
+            'Surat Dinas Dibatalkan',
+            'Surat Dinas "'
+                . $dutyLetter->title
+                . '" telah dibatalkan oleh Admin.'
+        );
 
         return redirect()
             ->route(

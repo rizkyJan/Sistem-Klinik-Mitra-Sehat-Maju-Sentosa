@@ -382,6 +382,9 @@
                     <span class="truncate">
                         Surat Dinas Saya
                     </span>
+
+                    <x-sidebar-notification-badge
+                        :count="$dutySidebarCount ?? 0" />
                 </a>
             </div>
         </div>

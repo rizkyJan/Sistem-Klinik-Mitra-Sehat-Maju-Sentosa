@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'hear-you.required' => \App\Http\Middleware\EnsureHearYouCompleted::class,
+            'monthly-report.required' => \App\Http\Middleware\EnsureDepartmentMonthlyReportCompleted::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

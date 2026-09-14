@@ -33,6 +33,8 @@ class EnsureHearYouCompleted
         if (
             $routeName === $prefix . '.dashboard'
             || str_starts_with((string) $routeName, $prefix . '.hear-you.')
+            || ($prefix === 'kabid'
+                && str_starts_with((string) $routeName, 'kabid.monthly-reports.'))
             || str_starts_with((string) $routeName, $prefix . '.notifications.')
         ) {
             return $next($request);
